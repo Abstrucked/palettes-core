@@ -209,7 +209,7 @@ contract PaletteRenderer {
           );
 
           renderSvg = string.concat(renderSvg, svgColors(_seed), "</svg>");
-          
+
           return renderSvg;
     }
 }

@@ -69,20 +69,24 @@ contract Palettes is Initializable, ERC721Upgradeable, ERC721PausableUpgradeable
 
   function rgbPalette(uint256 _tokenId) public view returns (PaletteRenderer.Color[8] memory) {
     require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+    require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
+
     return renderer.getBasePalette(_palettes[_tokenId]);
   }
 
   function webPalette(uint256 _tokenId) public view returns (string[8] memory) {
     require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+    require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
+
     return  renderer.webPalette(_palettes[_tokenId]);
   }
   
   function image(uint256 _tokenId) public view returns(string memory) {
     require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+    require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
+
     return renderer.drawPalette(_palettes[_tokenId]);
   }
-
-  // The following functions are overrides required by Solidity.
 
   function _update(address to, uint256 tokenId, address auth)
   internal

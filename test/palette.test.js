@@ -45,8 +45,7 @@ describe("Palette contract", async () => {
     // })
 
     it("Should mint a token with token ID 1 & 2 to account1", async function () {
-      const address1 = account1.address;
-      
+
       
       const tx1  = await palettes.connect(account1).mint();
       tx1.wait()
@@ -62,9 +61,8 @@ describe("Palette contract", async () => {
     });
 
     it("Should mint 10", async function () {
-      const address1 = account1.address;
-
-      for( let i=0; i<100; i++) {
+      const maxMint = 10;
+      for( let i=0; i<maxMint; i++) {
         // const signer = (await ethers.getSigners())[i]
         // const tx1  = await palettes.connect(signer).mint();
         const tx1  = await palettes.mint();
@@ -76,9 +74,9 @@ describe("Palette contract", async () => {
 
       console.log(await palettes.image(1n))
       // console.log(await palettes.image(ethers.BigNumber.from(50)))
-      console.log(await palettes.rgbPalette(100n))
-      console.log(await palettes.webPalette(100n))
-      expect( await palettes.minted()).to.equal( 100n);
+      console.log(await palettes.rgbPalette(1n))
+      console.log(await palettes.webPalette(1n))
+      expect( await palettes.minted()).to.equal( maxMint);
       
     });
   });
