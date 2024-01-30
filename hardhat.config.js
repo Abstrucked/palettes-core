@@ -14,6 +14,7 @@ module.exports = {
   },
   gasReporter: {
     currency: 'USD',
+    showMethodSig: true,
     coinmarketcap: process.env.COINMARKETCAP_APIKEY,
     token: 'ETH',
     gasPriceApi: 'https://api.etherscan.io/api?module=proxy&action=eth_gasPrice',
@@ -37,6 +38,15 @@ module.exports = {
 if(process.env.MAINNET) {
   module.exports.networks.ethereum =  {
     url: process.env.MAINNET,
+    ledgerAccounts: [
+      "0x307E2701D27032E0663a704B3396163331DD6F72",
+    ],
+  }
+}
+
+if(process.env.ARBITRUM) {
+  module.exports.networks.arbitrum =  {
+    url: process.env.ARBITRUM,
     ledgerAccounts: [
       "0x307E2701D27032E0663a704B3396163331DD6F72",
     ],

@@ -7,22 +7,20 @@
 const hre = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
 
-  const lockedAmount = hre.ethers.parseEther("0.001");
+  const Utils = await hre.ethers.deployContract("Utils");
+  await Utils.waitForDeployment();
 
-  const lock = await hre.ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
+  const PaletteRenderer = await hre.ethers.deployContract("PaletteRenderer", {
+    libraries:{
+      Utils: await Utils.getAddress(),
+    }});
+  await PaletteRenderer.waitForDeployment();
 
-  await lock.waitForDeployment();
+  const Palette = await hre.ethers.getContractFactory("Palettes", [await PaletteRenderer.getAddress()]);
+  await Palette.waitForDeployment();
 
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+  console.log("Palette deployed to:", await Palette.getAddress());
 }
 
 // We recommend this pattern to be able to use async/await everywhere

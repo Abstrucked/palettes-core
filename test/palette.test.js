@@ -79,10 +79,11 @@ describe("Palette contract", async () => {
     it("Should mint 10", async function () {
       const address1 = account1.address;
 
-      for( let i=0; i<10; i++) {
-        const signer = (await ethers.getSigners())[i]
-        const tx1  = await token721.connect(signer).mint();
-        tx1.wait()  
+      for( let i=0; i<100; i++) {
+        // const signer = (await ethers.getSigners())[i]
+        // const tx1  = await token721.connect(signer).mint();
+        const tx1  = await token721.mint();
+        tx1.wait()
         console.log(await token721.image((BigInt(i+1))))
         // console.log(await token721.webPalette(ethers.BigNumber.from(i+1)))
       }

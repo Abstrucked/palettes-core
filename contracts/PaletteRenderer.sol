@@ -112,15 +112,15 @@ contract PaletteRenderer {
         );
         // Dark
         palette[6] = Color(
-            ((base.r/5)+(complementary.r/5)),
-            ((base.g/5)+(complementary.g/5)),
-            ((base.b/5)+(complementary.b/5))
+            ((base.r/5)),
+            ((base.g/5)),
+            ((base.b/5))
         );
         // Light
         palette[7] = Color(
-            (255-(base.r/3+(complementary.r/3))),
-            (255-(base.g/3+(complementary.r/3))),
-            (255-(base.b/3+(complementary.r/3)))  
+            (255-(complementary.r/3)),
+            (255-(complementary.r/3)),
+            (255-(complementary.r/3))
         );
         return palette;
     }
