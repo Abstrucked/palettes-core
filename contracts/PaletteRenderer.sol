@@ -2,16 +2,11 @@
 pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../libraries/Utils.sol";
+import "./interfaces/IPaletteRenderer.sol";
 
-contract PaletteRenderer {
+contract PaletteRenderer is IPaletteRenderer {
     
     uint256 private constant SIZE = 1024;
-
-    struct Color {
-        uint8 r;
-        uint8 g;
-        uint8 b;
-    }
 
     function generateColor(bytes32 seed) 
         private
@@ -50,7 +45,7 @@ contract PaletteRenderer {
      * @return value of 'number'
      */
     function getRGB(bytes32 seed) 
-        public 
+        public
         pure 
         returns (uint8[3] memory)
     {

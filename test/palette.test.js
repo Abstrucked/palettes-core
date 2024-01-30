@@ -1,4 +1,4 @@
-// Testing Palette.sol contract:
+// Testing Palettes.sol contract:
 const {  ethers, upgrades } = require("hardhat");
 const { expect } = require("chai");
 
@@ -9,7 +9,6 @@ describe("Palette contract", async () => {
   let _symbol='PAL';
   let account1,otheraccounts;
   beforeEach(async function () {
-    Palettes = await ethers.getContractFactory("Palettes");
     const utilsCF = await ethers.getContractFactory("Utils");
     const utils = await utilsCF.deploy();
     await utils.waitForDeployment();
@@ -17,11 +16,12 @@ describe("Palette contract", async () => {
     const Renderer = await ethers.getContractFactory("PaletteRenderer", {
       libraries:{
         Utils: await utils.getAddress(),
-      }});
+      }}
+    );
     renderer = await Renderer.deploy();
     await renderer.waitForDeployment();
     [owner, account1, ...otheraccounts] = await ethers.getSigners();
-
+    let Palettes = await ethers.getContractFactory("Palettes");
     palettes = await upgrades.deployProxy(Palettes, [owner.address, await renderer.getAddress()]);
     await palettes.waitForDeployment();
   });
@@ -46,18 +46,15 @@ describe("Palette contract", async () => {
 
     it("Should mint a token with token ID 1 & 2 to account1", async function () {
 
+
       
       const tx1  = await palettes.connect(account1).mint();
       tx1.wait()
-      // expect(await palettes.ownerOf(ethers.BigNumber.from(1))).to.equal(address1);     
-      const tx2  = await palettes.mint();
+      const tx2  = await palettes.connect(account1).mint();
       tx2.wait()
 
-      // console.log(await palettes.paletteToString(ethers.BigNumber.from(1)))
-      console.log(await palettes.image(1n))
-      // console.log(await palettes.image(ethers.BigNumber.from(2)))
-      
-      expect( await palettes.balanceOf( owner.address ) ).to.equal( 1n );
+      console.log(await palettes.tokenURI(1n))
+      expect( await palettes.balanceOf( account1.address ) ).to.equal( 2n );
     });
 
     it("Should mint 10", async function () {
@@ -67,15 +64,16 @@ describe("Palette contract", async () => {
         // const tx1  = await palettes.connect(signer).mint();
         const tx1  = await palettes.mint();
         tx1.wait()
-        console.log(await palettes.image((BigInt(i+1))))
+        console.log(await palettes.svg((BigInt(i+1))))
         // console.log(await palettes.webPalette(ethers.BigNumber.from(i+1)))
       }
       
 
-      console.log(await palettes.image(1n))
+      console.log(await palettes.svg(1n))
       // console.log(await palettes.image(ethers.BigNumber.from(50)))
       console.log(await palettes.rgbPalette(1n))
       console.log(await palettes.webPalette(1n))
+      console.log(await palettes.tokenURI(1n));
       expect( await palettes.minted()).to.equal( maxMint);
       
     });
