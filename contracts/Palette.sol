@@ -11,7 +11,7 @@ import "../libraries/Utils.sol";
 
 import "./PaletteRenderer.sol";
 
-contract Palette is ERC721, Ownable {
+contract Palettes is ERC721, Ownable {
   error MaxSupplyReached();
   error IdNotFound();
   uint256 private _tokenIdCounter;

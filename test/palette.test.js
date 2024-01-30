@@ -18,7 +18,7 @@ describe("Palette contract", async () => {
   let account1,otheraccounts;
   let data;
   beforeEach(async function () {
-    PALToken = await ethers.getContractFactory("Palette");
+    PALToken = await ethers.getContractFactory("Palettes");
     const utilsCF = await ethers.getContractFactory("Utils");
     const utils = await utilsCF.deploy();
     await utils.waitForDeployment();
