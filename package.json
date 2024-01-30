@@ -1,0 +1,50 @@
+{
+  "name": "palettes-erc721",
+  "version": "1.0.0",
+  "description": "Fully onchain autogenerative 8 color palettes",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abstrucked/palettes-erc721.git"
+  },
+  "keywords": [
+    "ERC721",
+    "NFT",
+    "Palettes",
+    "smartcontract-tools"
+  ],
+  "author": "Abstrucked",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Abstrucked/palettes-erc721/issues"
+  },
+  "homepage": "https://github.com/Abstrucked/palettes-erc721#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1",
+    "@openzeppelin/contracts-upgradeable": "^5.0.1",
+    "hardhat": "^2.19.4"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-ledger": "^1.0.1",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "chai": "^4.2.0",
+    "dotenv": "^16.4.1",
+    "ethers": "^6.4.0",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-bytes-utils": "^0.8.2",
+    "solidity-coverage": "^0.8.0",
+    "typechain": "^8.3.0"
+  },
+  "directories": {
+    "test": "test"
+  }
+}
