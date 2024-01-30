@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/Strings.sol";
-// import "solidity-bytes-utils/contracts/BytesLib.sol";
 import "../libraries/Utils.sol";
 
 contract PaletteRenderer {
     
-    uint256 constant SIZE = 1024;
+    uint256 private constant SIZE = 1024;
 
     struct Color {
         uint8 r;
@@ -126,7 +125,7 @@ contract PaletteRenderer {
     }
 
     function getHex(Color memory rgb) 
-        public 
+        public
         pure 
         returns(string memory) 
     {
@@ -134,7 +133,11 @@ contract PaletteRenderer {
         color[0] = string(Utils.uintToHex(rgb.r));
         color[1] = string(Utils.uintToHex(rgb.g));
         color[2] = string(Utils.uintToHex(rgb.b));
-        return  string.concat("#", color[0], color[1], color[2]);
+        // Add leading 0 if needed
+        bytes(color[0]).length == 1 ? string.concat(color[0], "0") : "";
+        bytes(color[1]).length == 1 ? string.concat(color[1], "0") : "";
+        bytes(color[2]).length == 1 ? string.concat(color[2], "0") : "";
+    return  string.concat("#", color[0], color[1], color[2]);
     } 
 
     function webPalette(bytes32 seed)
@@ -156,7 +159,7 @@ contract PaletteRenderer {
         return hexPalette;
     }
 
-    function SquareSVG(bytes32 seed) 
+    function svgColors(bytes32 seed)
         private 
         pure
         returns (string memory) 
@@ -204,8 +207,8 @@ contract PaletteRenderer {
             Utils.uint2str(SIZE/4),
             '" xmlns="http://www.w3.org/2000/svg">'
           );
-          string memory blocks = SquareSVG(_seed);
-          renderSvg = string.concat(renderSvg, blocks, "</svg>");
+
+          renderSvg = string.concat(renderSvg, svgColors(_seed), "</svg>");
           
           return renderSvg;
     }
