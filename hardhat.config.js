@@ -2,6 +2,8 @@ require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 require("@nomicfoundation/hardhat-ledger");
 require("hardhat-gas-reporter");
+require('@openzeppelin/hardhat-upgrades');
+
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {

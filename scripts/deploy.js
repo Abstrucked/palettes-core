@@ -16,11 +16,11 @@ async function main() {
       Utils: await Utils.getAddress(),
     }});
   await PaletteRenderer.waitForDeployment();
+  const Palettes = await hre.ethers.getContractFactory("Palettes");
+  const palettes = await hre.upgrades.deployProxy(Palettes, [(await hre.ethers.getSigners())[0].address, await PaletteRenderer.getAddress()]);
+  await palettes.waitForDeployment();
 
-  const Palette = await hre.ethers.getContractFactory("Palettes", [await PaletteRenderer.getAddress()]);
-  await Palette.waitForDeployment();
-
-  console.log("Palette deployed to:", await Palette.getAddress());
+  console.log("Palette deployed to:", await palettes.getAddress());
 }
 
 // We recommend this pattern to be able to use async/await everywhere
