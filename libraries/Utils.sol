@@ -3,11 +3,11 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/utils/Strings.sol";
 library Utils {
 
-    function random(string memory input) internal pure returns (uint256){
+    function random(string memory input) public pure returns (uint256){
         return  uint256(keccak256(abi.encodePacked(input)));
     }
 
-    function randomBytes32(string memory input) internal pure returns (bytes32){
+    function randomBytes32(string memory input) public pure returns (bytes32){
         return  bytes32(keccak256(abi.encodePacked(input)));
     }
 
@@ -16,7 +16,7 @@ library Utils {
         string memory keyPrefix,
         uint256 lower,
         uint256 upper
-    ) internal pure returns (uint256) {
+    ) public pure returns (uint256) {
         uint256 rand = random(string(abi.encodePacked(keyPrefix, Strings.toString(tokenId))));
         return (rand % (upper - lower)) + lower;
     }
@@ -56,7 +56,7 @@ library Utils {
 
 
     // converts an unsigned integer to a string
-    function uint2str(uint256 _i) internal pure returns (string memory _uintAsString) {
+    function uint2str(uint256 _i) public pure returns (string memory _uintAsString) {
         if (_i == 0) {
             return "0";
         }
