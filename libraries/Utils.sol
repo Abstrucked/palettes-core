@@ -16,7 +16,7 @@ library Utils {
         string memory keyPrefix,
         uint256 lower,
         uint256 upper
-    ) public pure returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 rand = random(string(abi.encodePacked(keyPrefix, Strings.toString(tokenId))));
         return (rand % (upper - lower)) + lower;
     }
