@@ -127,6 +127,7 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, ERC721Pausable
    * @dev Calculates and returns the metadata for a specific token.
    * @param tokenId The `tokenId` for this token.
    * @return string The metadata for a specific token.
+   * @notice Code snippet based on Checks - ChecksMetadata.sol {author: Jalil.eth}
    */
   function tokenURI(uint256 tokenId)
   public

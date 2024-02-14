@@ -29,7 +29,7 @@ library Utils {
        * Inspired by Java code - unknown url but will find later
        * Converts a decimal value to a hex value without the #
        */
-    function uintToHex (uint256 decimalValue) pure public returns (bytes memory) {
+    function uintToHex (uint256 decimalValue) pure internal returns (bytes memory) {
         uint remainder;
         bytes memory hexResult = "";
         string[16] memory hexDictionary = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
