@@ -6,6 +6,9 @@ library Utils {
     function random(string memory input) internal pure returns (uint256){
         return  uint256(keccak256(abi.encodePacked(input)));
     }
+    function randomBytesInput(bytes memory input) internal pure returns (uint256){
+        return  uint256(keccak256(abi.encodePacked(input)));
+    }
 
     function randomBytes32(string memory input) internal pure returns (bytes32){
         return  bytes32(keccak256(abi.encodePacked(input)));
