@@ -15,7 +15,7 @@ contract TestERC721 is ERC721, IUsePalette {
         _palettes.setPaletteRecord(tokenId, address(this), paletteId, signature);
     }
 
-    function getPalette(uint256 tokenId) public view returns (Palettes.WebPalette memory){
+    function getPalette(uint256 tokenId) public view returns (string[8] memory){
         return _palettes.getWebPalette(tokenId, address(this));
     }
 

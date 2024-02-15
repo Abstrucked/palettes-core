@@ -5,9 +5,7 @@ pragma solidity ^0.8.20;
 interface IPalettes {
     /// Color struct definition
     struct RGBColor {
-        uint8 r;
-        uint8 g;
-        uint8 b;
+        uint24 value;
     }
 
     struct PaletteRecord {
@@ -15,12 +13,12 @@ interface IPalettes {
         uint256 tokenId;
     }
 
-    struct WebPalette {
-        string[8] colors;
-    }
+//    struct WebPalette {
+//        string[8] colors;
+//    }
 
     struct RGBPalette {
-        RGBColor[8] colors;
+        uint192 colors;
     }
 
 
@@ -32,7 +30,7 @@ interface IPalettes {
     function rgbPalette(uint256) external view returns (RGBPalette memory);
 
     /// @dev Returns the hex color palette for a specific token.
-    function webPalette(uint256) external view returns (WebPalette memory);
+    function webPalette(uint256) external view returns (string[8] memory);
 
     /// @dev Returns the SVG image of the color palette for a specific token.
     function svg(uint256) external view returns(string memory);

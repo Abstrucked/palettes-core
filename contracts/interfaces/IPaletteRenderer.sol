@@ -14,7 +14,7 @@ interface IPaletteRenderer {
     function getBasePalette(bytes32) external pure returns (IPalettes.RGBPalette memory);
 
     /// @dev Returns the hex color palette from the palette seed.
-    function webPalette(bytes32) external pure returns (IPalettes.WebPalette memory);
+    function webPalette(bytes32) external pure returns (string[8] memory);
 
     /// @dev Returns the SVG color palette from the palette seed.
     function drawPalette(bytes32) external pure returns (string memory);

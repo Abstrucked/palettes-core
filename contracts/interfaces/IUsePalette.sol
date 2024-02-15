@@ -6,5 +6,5 @@ import {IPalettes} from "./IPalettes.sol";
 interface IUsePalette {
 
     function setPalette(uint256 tokenId, uint256 paletteId, bytes calldata signature) external;
-    function getPalette(uint256 tokenId) external view returns (IPalettes.WebPalette memory);
+    function getPalette(uint256 tokenId) external view returns (string[8] memory);
 }

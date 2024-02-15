@@ -86,14 +86,14 @@ library  PaletteMetadata {
    */
     function attributes(bytes32 seed) private pure returns(bytes memory) {
         return abi.encodePacked(
-            trait("Color 1", PaletteRenderer.webPalette(seed).colors[0], ","),
-            trait("Color 2", PaletteRenderer.webPalette(seed).colors[1], ","),
-            trait("Color 3", PaletteRenderer.webPalette(seed).colors[2], ","),
-            trait("Color 4", PaletteRenderer.webPalette(seed).colors[3], ","),
-            trait("Color 5", PaletteRenderer.webPalette(seed).colors[4], ","),
-            trait("Color 6", PaletteRenderer.webPalette(seed).colors[5], ","),
-            trait("Color 7", PaletteRenderer.webPalette(seed).colors[6], ","),
-            trait("Color 8", PaletteRenderer.webPalette(seed).colors[7], "")
+            trait("Color 1", PaletteRenderer.webPalette(seed)[0], ","),
+            trait("Color 2", PaletteRenderer.webPalette(seed)[1], ","),
+            trait("Color 3", PaletteRenderer.webPalette(seed)[2], ","),
+            trait("Color 4", PaletteRenderer.webPalette(seed)[3], ","),
+            trait("Color 5", PaletteRenderer.webPalette(seed)[4], ","),
+            trait("Color 6", PaletteRenderer.webPalette(seed)[5], ","),
+            trait("Color 7", PaletteRenderer.webPalette(seed)[6], ","),
+            trait("Color 8", PaletteRenderer.webPalette(seed)[7], "")
         );
     }
 

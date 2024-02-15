@@ -13,6 +13,7 @@ import {PaletteMetadata} from "../libraries/PaletteMetadata.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IPaletteRenderer} from "./interfaces/IPaletteRenderer.sol";
 import {PaletteRenderer} from "./PaletteRenderer.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import {console} from "hardhat/console.sol";
 
@@ -102,7 +103,7 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
    * @param _tokenId The `tokenId` for this token.
    * @return string The hex color palette for a specific token.
    */
-  function webPalette(uint256 _tokenId) external view returns (WebPalette memory) {
+  function webPalette(uint256 _tokenId) external view returns (string[8] memory) {
     require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
     require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
@@ -212,7 +213,7 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 
   }
 
-  function getWebPalette(uint256 tokenId, address _contractAddress) external view returns (WebPalette memory){
+  function getWebPalette(uint256 tokenId, address _contractAddress) external view returns (string[8] memory){
     console.log("msg.sender", msg.sender);
     uint256 paletteId =  _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
     require(paletteId > 0, "Palette not found");
