@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/Strings.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 library Utils {
 
-    function random(string memory input) public pure returns (uint256){
+    function random(string memory input) internal pure returns (uint256){
         return  uint256(keccak256(abi.encodePacked(input)));
     }
 
-    function randomBytes32(string memory input) public pure returns (bytes32){
+    function randomBytes32(string memory input) internal pure returns (bytes32){
         return  bytes32(keccak256(abi.encodePacked(input)));
     }
 
@@ -16,7 +17,7 @@ library Utils {
         string memory keyPrefix,
         uint256 lower,
         uint256 upper
-    ) public pure returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 rand = random(string(abi.encodePacked(keyPrefix, Strings.toString(tokenId))));
         return (rand % (upper - lower)) + lower;
     }
@@ -26,7 +27,7 @@ library Utils {
        * Inspired by Java code - unknown url but will find later
        * Converts a decimal value to a hex value without the #
        */
-    function uintToHex (uint256 decimalValue) pure public returns (bytes memory) {
+    function uintToHex (uint256 decimalValue) pure internal returns (bytes memory) {
         uint remainder;
         bytes memory hexResult = "";
         string[16] memory hexDictionary = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
@@ -56,7 +57,7 @@ library Utils {
 
 
     // converts an unsigned integer to a string
-    function uint2str(uint256 _i) public pure returns (string memory _uintAsString) {
+    function uint2str(uint256 _i) internal pure returns (string memory _uintAsString) {
         if (_i == 0) {
             return "0";
         }

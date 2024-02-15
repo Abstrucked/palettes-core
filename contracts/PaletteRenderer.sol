@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../libraries/Utils.sol";
-import "./interfaces/IPaletteRenderer.sol";
+//import { IPaletteRenderer } from "./interfaces/IPaletteRenderer.sol";
+import { IPalettes } from "./interfaces/IPalettes.sol";
 
-contract PaletteRenderer is IPaletteRenderer {
-    
+library PaletteRenderer {
     uint256 private constant SIZE = 1024;
 
-    function generateColor(bytes32 seed) 
+    function generateUintColor(bytes32 seed)
         private
         pure
         returns (uint256)
@@ -44,74 +44,69 @@ contract PaletteRenderer is IPaletteRenderer {
      * @param seed of the token 
      * @return value of 'number'
      */
-    function getRGB(bytes32 seed) 
-        public
+    function getBaseColor(bytes32 seed)
+        internal 
         pure 
-        returns (uint8[3] memory)
+        returns (IPalettes.RGBColor memory)
     {
-        uint256 col = generateColor(bytes32(seed));
-        return [getColorComponentRed(col), getColorComponentGreen(col), getColorComponentBlue(col)];
+        uint256 col = generateUintColor(bytes32(seed));
+        return IPalettes.RGBColor(getColorComponentRed(col), getColorComponentGreen(col), getColorComponentBlue(col));
     }
 
      function getBasePalette(bytes32 _seed) 
-        public 
+        internal 
         pure 
-        returns (Color[8] memory)
+        returns (IPalettes.RGBPalette memory)
     {
-        Color[8] memory palette;
-        uint256 baseColor = generateColor( _seed);
-        Color memory base = Color( 
-            getColorComponentRed(baseColor), 
-            getColorComponentGreen(baseColor), 
-            getColorComponentBlue(baseColor)
-        );
-        Color memory complementary = Color(
-            (255 - base.r),
-            (255 - base.g),
-            (255 - base.b)  
+        IPalettes.RGBPalette memory palette;
+        IPalettes.RGBColor memory base = getBaseColor(_seed);
+        IPalettes.RGBColor memory complementary = IPalettes.RGBColor(
+            (255 - getBaseColor(_seed).r),
+            (255 - getBaseColor(_seed).g),
+            (255 - getBaseColor(_seed).b)  
         );
 
-        // Main Color
-        palette[0] = base;        
+        // Set Base Color
+        palette.colors[0] = base;
         // Base Right Spectrum
-        palette[1] = Color(
-            (base.b),
-            (base.r),
-            (base.g)  
+        palette.colors[1] = IPalettes.RGBColor(
+            (getBaseColor(_seed).b),
+            (getBaseColor(_seed).r),
+            (getBaseColor(_seed).g)  
         );
-        
-        palette[2] = Color(
-            (255 - base.r),
-            (255 - base.g),
-            (255 - base.b)  
+
+        palette.colors[2] = IPalettes.RGBColor(
+            (255 - getBaseColor(_seed).r),
+            (255 - getBaseColor(_seed).g),
+            (255 - getBaseColor(_seed).b)  
         );
         
         // Base Left Spectrum
-        palette[3] = Color(
-            (base.g),
-            (base.r),
-            (base.b)  
+        palette.colors[3] = IPalettes.RGBColor(
+            (getBaseColor(_seed).g),
+            (getBaseColor(_seed).r),
+            (getBaseColor(_seed).b)  
         );
         // Base Right Spectrum
-        palette[4] = Color(
+        palette.colors[4] = IPalettes.RGBColor(
             (complementary.b),
             (complementary.r),
             (complementary.g)  
         );
         // Base Left Spectrum
-        palette[5] = Color(
+        palette.colors[5] = IPalettes.RGBColor(
             (complementary.g),
             (complementary.r),
             (complementary.b)  
         );
         // Dark
-        palette[6] = Color(
-            ((base.r/5)),
-            ((base.g/5)),
-            ((base.b/5))
+        palette.colors[6] = IPalettes.RGBColor(
+            ((getBaseColor(_seed).r/5)),
+            ((getBaseColor(_seed).g/5)),
+            ((getBaseColor(_seed).b/5))
         );
         // Light
-        palette[7] = Color(
+        palette.colors[7] = IPalettes.RGBColor(
             (255-(complementary.r/3)),
             (255-(complementary.r/3)),
             (255-(complementary.r/3))
@@ -119,8 +114,8 @@ contract PaletteRenderer is IPaletteRenderer {
         return palette;
     }
 
-    function getHex(Color memory rgb) 
-        public
+    function getHex(IPalettes.RGBColor memory rgb)
+        internal 
         pure 
         returns(string memory) 
     {
@@ -136,22 +131,25 @@ contract PaletteRenderer is IPaletteRenderer {
     } 
 
     function webPalette(bytes32 seed)
-        public
+        internal 
         pure
-        returns (string[8] memory)
+        returns (IPalettes.WebPalette memory)
     {
-        string[8] memory hexPalette;
-        Color[8] memory rgbPalette = getBasePalette(seed);
-        hexPalette[0] = getHex(rgbPalette[0]);
-        hexPalette[1] = getHex(rgbPalette[1]);
-        hexPalette[2] = getHex(rgbPalette[2]);
-        hexPalette[3] = getHex(rgbPalette[3]);
-        hexPalette[4] = getHex(rgbPalette[4]);
-        hexPalette[5] = getHex(rgbPalette[5]);
-        hexPalette[6] = getHex(rgbPalette[6]);
-        hexPalette[7] = getHex(rgbPalette[7]);
-        
-        return hexPalette;
+//        IPalettes.RGBPalette memory rgbPalette = getBasePalette(seed);
+
+        return IPalettes.WebPalette(
+            [
+                getHex(getBasePalette(seed).colors[0]),
+                getHex(getBasePalette(seed).colors[1]),
+                getHex(getBasePalette(seed).colors[2]),
+                getHex(getBasePalette(seed).colors[3]),
+                getHex(getBasePalette(seed).colors[4]),
+                getHex(getBasePalette(seed).colors[5]),
+                getHex(getBasePalette(seed).colors[6]),
+                getHex(getBasePalette(seed).colors[7])
+            ]
+        );
+
     }
 
     function svgColors(bytes32 seed)
@@ -159,52 +157,45 @@ contract PaletteRenderer is IPaletteRenderer {
         pure
         returns (string memory) 
     {
-        Color[8] memory palette = getBasePalette(seed);
-        string memory colorTuple;
-        uint256 HEIGHT = SIZE/palette.length;
+
+        uint256 HEIGHT = SIZE/getBasePalette(seed).colors.length;
         string memory renderSvg;
-        for(uint256 i=0; i<palette.length; i++) {
-            colorTuple = string.concat(
-                Utils.uint2str(palette[i].r),
-                ",",
-                Utils.uint2str(palette[i].g),
-                ",",
-                Utils.uint2str(palette[i].b)
-              );
+        for(uint256 i=0; i<getBasePalette(seed).colors.length; i++) {
             renderSvg = string.concat(
                 renderSvg,
                 '<circle cy="',
-                    Utils.uint2str(SIZE/palette.length),
+                    Utils.uint2str(SIZE/getBasePalette(seed).colors.length),
                     '" cx="',
                     Utils.uint2str(i*HEIGHT+HEIGHT/2),
                     '" r="',
                     Utils.uint2str(HEIGHT/2-1),
                     '" fill="rgb(',
-                    colorTuple,
-                    ')"></circle>'
+                    string.concat(
+                        Utils.uint2str(getBasePalette(seed).colors[i].r),
+                        ",",
+                        Utils.uint2str(getBasePalette(seed).colors[i].g),
+                        ",",
+                        Utils.uint2str(getBasePalette(seed).colors[i].b)
+                    ), ')"></circle>'
                 );
         }
         return renderSvg;
     }
 
     function drawPalette(bytes32 _seed) 
-        public 
+        internal 
         pure 
-        returns (string memory) {
-        string memory renderSvg = string.concat(
-            '<svg width="',
-            Utils.uint2str(SIZE),
-            '" height="',
-            Utils.uint2str(SIZE/4),
-            '" viewBox="0 0 ',
-            Utils.uint2str(SIZE),
-            " ",
-            Utils.uint2str(SIZE/4),
-            '" xmlns="http://www.w3.org/2000/svg">'
-          );
-
-          renderSvg = string.concat(renderSvg, svgColors(_seed), "</svg>");
-
-          return renderSvg;
+        returns (string memory)
+    {
+        return string.concat(
+              '<svg width="',
+              Utils.uint2str(SIZE),
+              '" height="',
+              Utils.uint2str(SIZE/4),
+              '" viewBox="0 0 ',
+              Utils.uint2str(SIZE),
+              " ",
+              Utils.uint2str(SIZE/4),
+              '" xmlns="http://www.w3.org/2000/svg">', svgColors(_seed), "</svg>");
     }
 }

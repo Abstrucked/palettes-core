@@ -28,6 +28,7 @@ module.exports = {
     enabled: true
   },
   networks: {
+
     hardhat: {
       ledgerAccounts: [
         "0x307E2701D27032E0663a704B3396163331DD6F72",

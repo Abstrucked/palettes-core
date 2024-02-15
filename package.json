@@ -4,6 +4,7 @@
   "description": "Fully onchain autogenerative 8 color palettes",
   "main": "index.js",
   "scripts": {
+    "compile": "npx hardhat compile",
     "test": "npx hardhat test"
   },
   "repository": {
@@ -25,7 +26,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.1",
     "@openzeppelin/contracts-upgradeable": "^5.0.1",
-    "hardhat": "^2.19.4"
+    "hardhat": "^2.20.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
