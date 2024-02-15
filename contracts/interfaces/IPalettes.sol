@@ -27,7 +27,7 @@ interface IPalettes {
     function getSeed(uint256) external view returns (bytes32);
 
     /// @dev Returns the RBG color palette for a specific token.
-    function rgbPalette(uint256) external view returns (RGBPalette memory);
+//    function rgbPalette(uint256) external view returns (RGBPalette memory);
 
     /// @dev Returns the hex color palette for a specific token.
     function webPalette(uint256) external view returns (string[8] memory);

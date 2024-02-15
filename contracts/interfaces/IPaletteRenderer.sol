@@ -11,7 +11,7 @@ interface IPaletteRenderer {
     function getBaseColor(bytes32) external pure returns (IPalettes.RGBColor memory);
 
     /// @dev Returns the RGB palette from the palette seed.
-    function getBasePalette(bytes32) external pure returns (IPalettes.RGBPalette memory);
+    function getBasePalette(bytes32) external pure returns (uint192);
 
     /// @dev Returns the hex color palette from the palette seed.
     function webPalette(bytes32) external pure returns (string[8] memory);

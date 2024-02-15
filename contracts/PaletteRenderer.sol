@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../libraries/Utils.sol";
+import {Colors} from "../libraries/Colors.sol";
 //import { IPaletteRenderer } from "./interfaces/IPaletteRenderer.sol";
 import { IPalettes } from "./interfaces/IPalettes.sol";
 
@@ -53,7 +54,7 @@ library PaletteRenderer {
     {
         uint256 col = generateUintColor(bytes32(seed));
         return IPalettes.RGBColor(
-            Utils.packRGB(
+            Colors.packRGB(
                 getColorComponentRed(col),
                 getColorComponentGreen(col),
                 getColorComponentBlue(col)
@@ -64,7 +65,7 @@ library PaletteRenderer {
      function getBasePalette(bytes32 _seed) 
         internal 
         pure 
-        returns (IPalettes.RGBPalette memory)
+        returns (uint192)
     {
         uint24[8] memory palette; // tmp storage
 
@@ -74,26 +75,41 @@ library PaletteRenderer {
         uint8 b;
 
         // Get unpacked base color.
-        (r,g,b) = Utils.unpackRGB(getBaseColor(_seed).value);
-        palette[2] = Utils.packRGB((255 - r),(255 - g),(255 - b));
+        (r,g,b) = Colors.unpackRGB(getBaseColor(_seed).value);
+        uint8 cr = 255 - r;
+        uint8 cg = 255 - g;
+        uint8 cb = 255 - b;
 
-        // Set Base Color
-        palette[0] = getBaseColor(_seed).value;
-        // Base Right Spectrum
-        palette[1] = Utils.packRGB(b, r, g);
-        // Base Left Spectrum
-        palette[3] = Utils.packRGB(g, r, b);
-        // Dark
-        palette[6] = Utils.packRGB((r/5),(g/5),(b/5));
-        // Complementary Color
-        (r,g,b) = Utils.unpackRGB(palette[2]);
-        // Complementary Right Spectrum
-        palette[4] = Utils.packRGB(b, r, g);
-        // Complementary Left Spectrum
-        palette[5] = Utils.packRGB(g, r, b);
-        // Light
-        palette[7] = Utils.packRGB((255-(r/3)),(255-(g/3)),(255-(b/3)));
-        return IPalettes.RGBPalette(Utils.packPalette(palette));
+        return Colors.packPalette(
+            [
+                getBaseColor(_seed).value,
+                Colors.packRGB(b, r, g),
+                Colors.packRGB(g, r, b),
+                Colors.packRGB(cr, cg, cb),
+                Colors.packRGB(cb, cr, cg),
+                Colors.packRGB(cg, cr, cb),
+                Colors.packRGB((r/5),(g/5),(b/5)),
+                Colors.packRGB((255-(cr/3)),(255-(cg/3)),(255-(cb/3)))
+            ]
+        );
+
+//        // Set Base Color
+//        palette[0] = getBaseColor(_seed).value;
+//        // Base Right Spectrum
+//        palette[1] = Colors.packRGB(b, r, g);
+//        // Base Left Spectrum
+//        palette[3] = Colors.packRGB(g, r, b);
+//        // Dark
+//        palette[6] = Colors.packRGB((r/5),(g/5),(b/5));
+//        // Complementary Color
+//        palette[2] = Colors.unpackRGB(cr, cg, cb);
+//        // Complementary Right Spectrum
+//        palette[4] = Colors.packRGB(cb, cr, cg);
+//        // Complementary Left Spectrum
+//        palette[5] = Colors.packRGB(cg, cr, cb);
+//        // Light
+//        palette[7] = Colors.packRGB((255-(cr/3)),(255-(cg/3)),(255-(cb/3)));
+//        return IPalettes.RGBPalette(Colors.packPalette(palette));
     }
 
     function getHex(uint24 rgb)
@@ -101,34 +117,36 @@ library PaletteRenderer {
         pure 
         returns(string memory) 
     {
-        uint8 r;
-        uint8 g;
-        uint8 b;
-        (r,g,b) = Utils.unpackRGB(rgb);
-        return string.concat(
-            "#",
-            bytes(string(Utils.uintToHex(r))).length == 1 ? string.concat(string(Utils.uintToHex(r)), "0") : "",
-            bytes(string(Utils.uintToHex(g))).length == 1 ? string.concat(string(Utils.uintToHex(g)), "0") : "",
-            bytes(string(Utils.uintToHex(b))).length == 1 ? string.concat(string(Utils.uintToHex(b)), "0") : ""
-        );
-    } 
+
+        bytes memory hexChars = "0123456789ABCDEF";
+
+        bytes memory hexString = new bytes(7);
+        hexString[0] = '#';
+
+        for (uint i = 0; i < 3; i++) {
+        hexString[2*i + 1] = hexChars[uint8(rgb >> (i*8 + 4)) & 0x0f];
+        hexString[2*i + 2] = hexChars[uint8(rgb >> (i*8)) & 0x0f];
+        }
+
+        return string(hexString);
+    }
 
     function webPalette(bytes32 seed)
         internal 
         pure
         returns (string[8] memory)
     {
-        uint192 rgbPalette = getBasePalette(seed).colors;
+        uint192 rgbPalette = getBasePalette(seed);
         return
             [
-                getHex(Utils.unpackPaletteAt(rgbPalette,0)),
-                getHex(Utils.unpackPaletteAt(rgbPalette,1)),
-                getHex(Utils.unpackPaletteAt(rgbPalette,2)),
-                getHex(Utils.unpackPaletteAt(rgbPalette,3)),
-                getHex(Utils.unpackPaletteAt(rgbPalette,4)),
-                getHex(Utils.unpackPaletteAt(rgbPalette,5)),
-                getHex(Utils.unpackPaletteAt(rgbPalette,6)),
-                getHex(Utils.unpackPaletteAt(rgbPalette,7))
+                getHex(Colors.unpackPaletteAt(rgbPalette,0)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,1)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,2)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,3)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,4)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,5)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,6)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,7))
             ];
 
 
@@ -139,7 +157,7 @@ library PaletteRenderer {
         pure
         returns (string memory) 
     {
-        uint192 palette = getBasePalette(seed).colors;
+        uint192 palette = getBasePalette(seed);
         uint256 HEIGHT = SIZE/8;
         string memory renderSvg;
         for(uint8 i=0; i<8; i++) {
@@ -152,7 +170,7 @@ library PaletteRenderer {
                     '" r="',
                     Utils.uint2str((HEIGHT/2)-1),
                     '" fill="',
-                    getHex(Utils.unpackPaletteAt(palette, i)),
+                    getHex(Colors.unpackPaletteAt(palette, i)),
                 '"></circle>'
             );
         }

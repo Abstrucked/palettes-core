@@ -12,6 +12,9 @@ describe("Palette contract", async () => {
     const utilsCF = await ethers.getContractFactory("Utils");
     const utils = await utilsCF.deploy();
     await utils.waitForDeployment();
+    const ColorsLib = await ethers.getContractFactory("Colors");
+    const colorsLib = await ColorsLib.deploy();
+    await colorsLib.waitForDeployment();
     console.log(await utils.getAddress())
     const Renderer = await ethers.getContractFactory("PaletteRenderer");
     renderer = await Renderer.deploy();

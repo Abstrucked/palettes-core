@@ -29,10 +29,10 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
   mapping(bytes => uint256) private _recordReverse;
 //  PaletteRenderer public renderer;
 
-  modifier onlyOwnerOf(uint256 tokenId) {
-    require(ownerOf(tokenId) == msg.sender, "Not the owner of the token");
-    _;
-  }
+//  modifier onlyOwnerOf(uint256 tokenId) {
+//    require(ownerOf(tokenId) == msg.sender, "Not the owner of the token");
+//    _;
+//  }
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -53,11 +53,9 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
         revert MaxSupplyReached();
     }
     _tokenIdCounter++;
-    uint256 tokenId = _tokenIdCounter;
-    _palettes[tokenId] = _generateSeed(tokenId);
-    _safeMint(msg.sender, tokenId);
-    
-    return tokenId;
+    _palettes[_tokenIdCounter] = _generateSeed(_tokenIdCounter);
+    _safeMint(msg.sender, _tokenIdCounter);
+    return _tokenIdCounter;
   }
 
   function minted() external view returns(uint256){
@@ -91,11 +89,21 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
    * @param _tokenId The `tokenId` for this token.
    * @return Color[8] The RBG color palette for a specific token.
    */
-  function rgbPalette(uint256 _tokenId) external view returns (RGBPalette memory) {
+  function rgbPalette(uint256 _tokenId) external view returns (uint24[8] memory) {
     require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
     require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
-    return PaletteRenderer.getBasePalette(_palettes[_tokenId]);
+    uint192 palette = PaletteRenderer.getBasePalette(_palettes[_tokenId]);
+    return [
+        uint24(palette >> 168),
+        uint24(palette >> 144),
+        uint24(palette >> 120),
+        uint24(palette >> 96),
+        uint24(palette >> 72),
+        uint24(palette >> 48),
+        uint24(palette >> 24),
+        uint24(palette)
+    ];
   }
 
   /**
