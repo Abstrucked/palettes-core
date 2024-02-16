@@ -6,27 +6,27 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../libraries/Utils.sol";
 import {PaletteMetadata} from "../libraries/PaletteMetadata.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IPaletteRenderer} from "./interfaces/IPaletteRenderer.sol";
 import {PaletteRenderer} from "./PaletteRenderer.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import {console} from "hardhat/console.sol";
 
 contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgradeable, EIP712Upgradeable {
-  error MaxSupplyReached();
-  error IdNotFound();
-  uint256 private _tokenIdCounter;
-  
-  uint256 public MAX_SUPPLY;
-  
-  mapping(uint256 => bytes32) private _palettes;
-  mapping(uint256 => PaletteRecord) private _records;
-  mapping(bytes => uint256) private _recordReverse;
+    error MaxSupplyReached();
+    error IdNotFound();
+
+    uint256 private _tokenIdCounter;
+
+    uint256 public MAX_SUPPLY;
+
+    mapping(uint256 => bytes32) private _palettes;
+    mapping(uint256 => PaletteRecord) private _records;
+    mapping(bytes => uint256) private _recordReverse;
 //  PaletteRenderer public renderer;
 
 //  modifier onlyOwnerOf(uint256 tokenId) {
@@ -34,118 +34,118 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 //    _;
 //  }
 
-  /// @custom:oz-upgrades-unsafe-allow constructor
-  constructor() {
-    _disableInitializers();
-  }
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
-  function initialize(address initialOwner) initializer public {
-    __ERC721_init("Palettes", "PAL");
-    __Ownable_init(initialOwner);
-    __EIP712_init("Palettes", "1");
-    MAX_SUPPLY = 10000;
+    function initialize(address initialOwner) initializer public {
+        __ERC721_init("Palettes", "PAL");
+        __Ownable_init(initialOwner);
+        __EIP712_init("Palettes", "1");
+        MAX_SUPPLY = 10000;
 //    renderer = PaletteRenderer(_renderer);
 
-  }
-
-  function mint() external returns (uint256){
-    if(_tokenIdCounter>= MAX_SUPPLY) {
-        revert MaxSupplyReached();
     }
-    _tokenIdCounter++;
-    _palettes[_tokenIdCounter] = _generateSeed(_tokenIdCounter);
-    _safeMint(msg.sender, _tokenIdCounter);
-    return _tokenIdCounter;
-  }
 
-  function minted() external view returns(uint256){
-    return _tokenIdCounter;
-  }
+    function mint() external returns (uint256){
+        if (_tokenIdCounter >= MAX_SUPPLY) {
+            revert MaxSupplyReached();
+        }
+        _tokenIdCounter++;
+        _palettes[_tokenIdCounter] = _generateSeed(_tokenIdCounter);
+        _safeMint(msg.sender, _tokenIdCounter);
+        return _tokenIdCounter;
+    }
 
-  /**
-   * @dev Generates a seed for a specific token.
+    function minted() external view returns (uint256){
+        return _tokenIdCounter;
+    }
+
+    /**
+     * @dev Generates a seed for a specific token.
    * @param _tokenId The `tokenId` for this token.
    * @return bytes32 The seed for a specific token.
    */
-  function _generateSeed(uint256 _tokenId) private view returns (bytes32){
-    require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
-    return Utils.randomBytes32(string(abi.encode(block.timestamp, msg.sender, (_tokenId))));
-  }
+    function _generateSeed(uint256 _tokenId) private view returns (bytes32){
+        require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+        return Utils.randomBytes32(string(abi.encode(block.timestamp, msg.sender, (_tokenId))));
+    }
 
-  /**
-   * @dev Returns the the seed for a specific token.
+    /**
+     * @dev Returns the the seed for a specific token.
    * @param _tokenId The `tokenId` for this token.
    * @return bytes32 The seed for a specific token.
    */
-  function getSeed(uint256 _tokenId) external view returns (bytes32){
-    if(_tokenId > _tokenIdCounter) {
-      revert IdNotFound();
+    function getSeed(uint256 _tokenId) external view returns (bytes32){
+        if (_tokenId > _tokenIdCounter) {
+            revert IdNotFound();
+        }
+        return _palettes[_tokenId];
     }
-    return _palettes[_tokenId];
-  }
 
-  /**
-   * @dev Returns the RBG color palette for a specific token.
+    /**
+     * @dev Returns the RBG color palette for a specific token.
    * @param _tokenId The `tokenId` for this token.
    * @return Color[8] The RBG color palette for a specific token.
    */
-  function rgbPalette(uint256 _tokenId) external view returns (uint24[8] memory) {
-    require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
-    require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
+    function rgbPalette(uint256 _tokenId) external view returns (uint24[8] memory) {
+        require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+        require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
-    uint192 palette = PaletteRenderer.getBasePalette(_palettes[_tokenId]);
-    return [
-        uint24(palette >> 168),
-        uint24(palette >> 144),
-        uint24(palette >> 120),
-        uint24(palette >> 96),
-        uint24(palette >> 72),
-        uint24(palette >> 48),
-        uint24(palette >> 24),
-        uint24(palette)
-    ];
-  }
+        uint192 palette = PaletteRenderer.getBasePalette(_palettes[_tokenId]);
+        return [
+            uint24(palette >> 168),
+            uint24(palette >> 144),
+            uint24(palette >> 120),
+            uint24(palette >> 96),
+            uint24(palette >> 72),
+            uint24(palette >> 48),
+            uint24(palette >> 24),
+            uint24(palette)
+            ];
+    }
 
-  /**
-   * @dev Returns the hex color palette for a specific token.
+    /**
+     * @dev Returns the hex color palette for a specific token.
    * @param _tokenId The `tokenId` for this token.
    * @return string The hex color palette for a specific token.
    */
-  function webPalette(uint256 _tokenId) external view returns (string[8] memory) {
-    require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
-    require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
+    function webPalette(uint256 _tokenId) external view returns (string[8] memory) {
+        require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+        require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
-    return  PaletteRenderer.webPalette(_palettes[_tokenId]);
-  }
+        return PaletteRenderer.webPalette(_palettes[_tokenId]);
+    }
 
-  function _update(address to, uint256 tokenId, address auth)
-  internal
-  override(ERC721Upgradeable)
-  returns (address)
-  {
-    return super._update(to, tokenId, auth);
-  }
+    function _update(address to, uint256 tokenId, address auth)
+    internal
+    override(ERC721Upgradeable)
+    returns (address)
+    {
+        return super._update(to, tokenId, auth);
+    }
 
-  function supportsInterface(bytes4 interfaceId)
-  public
-  view
-  override(ERC721Upgradeable)
-  returns (bool)
-  {
-    return super.supportsInterface(interfaceId);
-  }
+    function supportsInterface(bytes4 interfaceId)
+    public
+    view
+    override(ERC721Upgradeable)
+    returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
 
-  /**
-   * @dev Returns the SVG image of the color palette for a specific token.
+    /**
+     * @dev Returns the SVG image of the color palette for a specific token.
    * @param _tokenId The `tokenId` for this token.
    * @return string The SVG image of the color palette for a specific token.
    */
-  function svg(uint256 _tokenId) external view returns(string memory) {
-    require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
-    require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
+    function svg(uint256 _tokenId) external view returns (string memory) {
+        require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+        require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
-    return PaletteRenderer.drawPalette(_palettes[_tokenId]);
-  }
+        return PaletteRenderer.drawPalette(_palettes[_tokenId]);
+    }
 //
 //
 //
@@ -155,16 +155,16 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 //   * @return string The metadata for a specific token.
 //   * @notice Code snippet based on Checks - ChecksMetadata.sol {author: Jalil.eth}
 //   */
-  function tokenURI(uint256 tokenId)
-  public
-  view
-  override(ERC721Upgradeable)
-  returns (string memory)
-  {
-    require(tokenId <= _tokenIdCounter, "TokenId does not exist");
+    function tokenURI(uint256 tokenId)
+    public
+    view
+    override(ERC721Upgradeable)
+    returns (string memory)
+    {
+        require(tokenId <= _tokenIdCounter, "TokenId does not exist");
 
-   return PaletteMetadata.tokenURI(tokenId, _palettes[tokenId]);
-  }
+        return PaletteMetadata.tokenURI(tokenId, _palettes[tokenId]);
+    }
 //
 //  /**
 //   * @dev Generate the SVG snipped for a for all attributes.
@@ -186,12 +186,12 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 //    );
 //  }
 
-  /// @dev Generate the SVG snipped for a single attribute.
-  /// @param traitType The `trait_type` for this trait.
-  /// @param traitValue The `value` for this trait.
-  /// @param append Helper to append a comma.
-  /// @return string The SVG snippet for the attribute.
-  /// @notice Code snippet from Checks - ChecksMetadata.sol {author: Jalil.eth}
+    /// @dev Generate the SVG snipped for a single attribute.
+    /// @param traitType The `trait_type` for this trait.
+    /// @param traitValue The `value` for this trait.
+    /// @param append Helper to append a comma.
+    /// @return string The SVG snippet for the attribute.
+    /// @notice Code snippet from Checks - ChecksMetadata.sol {author: Jalil.eth}
 //  function trait(
 //    string memory traitType, string memory traitValue, string memory append
 //  ) public pure returns (string memory) {
@@ -204,8 +204,8 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 //    ));
 //  }
 
-  /// @dev Modifier should check for the owner of the linkedToken is the same as the msg.sender from
-  /// the sender contract.
+    /// @dev Modifier should check for the owner of the linkedToken is the same as the msg.sender from
+    /// the sender contract.
 //  modifier ownerOfLinkedToken(uint256 tokenId, address sender) {
 //    require(IERC721(_records[paletteId].contractAddress).ownerOf(_records[paletteId].tokenId) == msg.sender, "Not the owner of the token");
 //    _;
@@ -216,16 +216,45 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 //    _recordReverse[abi.encode(PaletteRecord(_contractAddress, _tokenId))] = paletteId;
 //  }
 
-  function setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId, bytes calldata signature) external  {
 
 
-  }
 
-  function getWebPalette(uint256 tokenId, address _contractAddress) external view returns (string[8] memory){
-    console.log("msg.sender", msg.sender);
-    uint256 paletteId =  _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
-    require(paletteId > 0, "Palette not found");
-//    require(ownerOf(paletteId) == msg.sender, "Not the owner of the token");
-    return PaletteRenderer.webPalette(_palettes[paletteId]);
-  }
+    function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) internal  {
+        _records[paletteId] = PaletteRecord(_contractAddress, _tokenId);
+        _recordReverse[abi.encode(PaletteRecord(_contractAddress, _tokenId))] = paletteId;
+//        emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
+    }
+
+    function setPaletteRecord(
+        uint256 paletteId,
+        address _contractAddress,
+        uint256 _tokenId,
+        bytes calldata signature
+    ) external returns(bool) {
+        address signer = ECDSA.recover(
+            _hashTypedDataV4(
+                keccak256(
+                    abi.encode(
+                        keccak256("PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"),
+                        paletteId,
+                        _contractAddress,
+                        _tokenId
+                    )
+                )
+            ),
+            signature
+        );
+        if(signer != ownerOf(paletteId)) {
+            revert("Not the owner of the token");
+        }
+        _setPaletteRecord(paletteId, _contractAddress, _tokenId);
+        return true;
+
+    }
+
+    function getWebPalette(uint256 tokenId, address _contractAddress) external view returns (string[8] memory){
+        uint256 paletteId = _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
+        require(paletteId > 0, "Palette not found");
+        return PaletteRenderer.webPalette(_palettes[paletteId]);
+    }
 }
