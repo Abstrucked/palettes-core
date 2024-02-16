@@ -14,6 +14,7 @@ describe("Palette contract", async () => {
     await utils.waitForDeployment();
     const ColorsLib = await ethers.getContractFactory("Colors");
     const colorsLib = await ColorsLib.deploy();
+
     await colorsLib.waitForDeployment();
     console.log(await utils.getAddress())
     const Renderer = await ethers.getContractFactory("PaletteRenderer");
@@ -23,6 +24,8 @@ describe("Palette contract", async () => {
     let Palettes = await ethers.getContractFactory("Palettes");
     palettes = await upgrades.deployProxy(Palettes, [owner.address]);
     await palettes.waitForDeployment();
+
+
   });
 
   describe("Should Deploy", async function () {
@@ -76,7 +79,11 @@ describe("Palette contract", async () => {
     });
     it("Should set the record for an NFT", async function () {
       let NFT = await ethers.getContractFactory("TestERC721");
-      const nft = await NFT.deploy(await palettes.getAddress());
+      const PaletteManager = await ethers.getContractFactory("PaletteManager");
+      const paletteManager = await upgrades.deployProxy(PaletteManager, [owner.address, await palettes.getAddress()]);
+      await paletteManager.waitForDeployment();
+      // await palettes.setPaletteManager(await paletteManager.getAddress());
+      const nft = await NFT.deploy(await paletteManager.getAddress(), await palettes.getAddress());
       await nft.waitForDeployment();
       // console.log(await nft.getAddress(), await nft.name(), await nft.symbol());
       await palettes.mint()
@@ -106,10 +113,10 @@ describe("Palette contract", async () => {
           ]
         },
         domain: {
-          name: "Palettes",
+          name: "PaletteManager",
           version: "1",
           chainId: BigInt(31337).toString(),
-          verifyingContract: p_address
+          verifyingContract: await paletteManager.getAddress(),
         },
         message: {
           paletteId: 1n,
@@ -126,6 +133,13 @@ describe("Palette contract", async () => {
       // ])
       console.log(signature)
       expect(await nft.setPalette(1n, 1n, signature)).to.emit(nft, "PaletteSet").withArgs(1n, 1n,);
+      console.log(await nft.getPalette(1n));
+
+      console.log({
+        palettesAddress: p_address,
+        paletteManagerAddress: await paletteManager.getAddress(),
+        nftAddress: nft_address
+      })
       // console.log(await palettes.eip712Domain());
       // const [h, n, v, i,  c, s] = await palettes.eip712Domain();
       // //

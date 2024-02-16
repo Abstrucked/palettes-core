@@ -3,9 +3,13 @@ pragma solidity ^0.8.20;
 
 // import "./ColorConverter.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+//import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IUsePalette} from "./interfaces/IUsePalette.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../libraries/Utils.sol";
@@ -13,10 +17,15 @@ import {PaletteMetadata} from "../libraries/PaletteMetadata.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IPaletteRenderer} from "./interfaces/IPaletteRenderer.sol";
 import {PaletteRenderer} from "./PaletteRenderer.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+import {console} from "hardhat/console.sol";
+import {IUsePalette} from "./interfaces/IUsePalette.sol";
 
-contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgradeable, EIP712Upgradeable {
+contract Palettes is IPalettes, Initializable, ERC721Upgradeable, AccessControlUpgradeable, UUPSUpgradeable {
+    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+
     error MaxSupplyReached();
     error IdNotFound();
 
@@ -25,8 +34,6 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
     uint256 public MAX_SUPPLY;
 
     mapping(uint256 => bytes32) private _palettes;
-    mapping(uint256 => PaletteRecord) private _records;
-    mapping(bytes => uint256) private _recordReverse;
 //  PaletteRenderer public renderer;
 
 //  modifier onlyOwnerOf(uint256 tokenId) {
@@ -41,12 +48,22 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 
     function initialize(address initialOwner) initializer public {
         __ERC721_init("Palettes", "PAL");
-        __Ownable_init(initialOwner);
-        __EIP712_init("Palettes", "1");
-        MAX_SUPPLY = 10000;
-//    renderer = PaletteRenderer(_renderer);
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
 
+    MAX_SUPPLY = 10000;
+//    renderer = PaletteRenderer(_renderer);
+        _grantRole(UPGRADER_ROLE, initialOwner);
+        _grantRole(OWNER_ROLE, initialOwner);
+//        _grantRole(MANAGER_ROLE, type(IUsePalette).interfaceId);
     }
+
+
+    function _authorizeUpgrade(address newImplementation)
+    internal
+    onlyRole(UPGRADER_ROLE)
+    override
+    {}
 
     function mint() external returns (uint256){
         if (_tokenIdCounter >= MAX_SUPPLY) {
@@ -111,9 +128,15 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
    * @param _tokenId The `tokenId` for this token.
    * @return string The hex color palette for a specific token.
    */
-    function webPalette(uint256 _tokenId) external view returns (string[8] memory) {
+    function webPalette(uint256 _tokenId) external view returns (string[8] memory)  {
+        require(
+            IERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
+            "Caller does not implement required interface"
+        );
+        console.log("MSG_SENDER");
+        console.log(msg.sender);
         require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
-        require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
+//        require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
         return PaletteRenderer.webPalette(_palettes[_tokenId]);
     }
@@ -126,10 +149,12 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
         return super._update(to, tokenId, auth);
     }
 
+    // The following functions are overrides required by Solidity.
+
     function supportsInterface(bytes4 interfaceId)
     public
     view
-    override(ERC721Upgradeable)
+    override(ERC721Upgradeable, AccessControlUpgradeable)
     returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -219,42 +244,5 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 
 
 
-    function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) internal  {
-        _records[paletteId] = PaletteRecord(_contractAddress, _tokenId);
-        _recordReverse[abi.encode(PaletteRecord(_contractAddress, _tokenId))] = paletteId;
-//        emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
-    }
 
-    function setPaletteRecord(
-        uint256 paletteId,
-        address _contractAddress,
-        uint256 _tokenId,
-        bytes calldata signature
-    ) external returns(bool) {
-        address signer = ECDSA.recover(
-            _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        keccak256("PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"),
-                        paletteId,
-                        _contractAddress,
-                        _tokenId
-                    )
-                )
-            ),
-            signature
-        );
-        if(signer != ownerOf(paletteId)) {
-            revert("Not the owner of the token");
-        }
-        _setPaletteRecord(paletteId, _contractAddress, _tokenId);
-        return true;
-
-    }
-
-    function getWebPalette(uint256 tokenId, address _contractAddress) external view returns (string[8] memory){
-        uint256 paletteId = _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
-        require(paletteId > 0, "Palette not found");
-        return PaletteRenderer.webPalette(_palettes[paletteId]);
-    }
 }

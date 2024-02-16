@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import {IPalettes} from "./IPalettes.sol";
+//import {IPalettes} from "./IPalettes.sol";
 
 /**
  toDo:  Add paletteManager infrastructure to lift weight form the Palette.sol contract

@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 
 interface IPalettes {
     // Events
-//    event PaletteRecordSet(uint256 indexed paletteId, address indexed contractAddress, uint256 indexed tokenId);
 
     /// Color struct definition
     struct RGBColor {
