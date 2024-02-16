@@ -82,7 +82,7 @@ describe("Palette contract", async () => {
       const PaletteManager = await ethers.getContractFactory("PaletteManager");
       const paletteManager = await upgrades.deployProxy(PaletteManager, [owner.address, await palettes.getAddress()]);
       await paletteManager.waitForDeployment();
-      // await palettes.setPaletteManager(await paletteManager.getAddress());
+      await palettes.setPaletteManager(await paletteManager.getAddress());
       const nft = await NFT.deploy(await paletteManager.getAddress(), await palettes.getAddress());
       await nft.waitForDeployment();
       // console.log(await nft.getAddress(), await nft.name(), await nft.symbol());
@@ -133,13 +133,15 @@ describe("Palette contract", async () => {
       // ])
       console.log(signature)
       expect(await nft.setPalette(1n, 1n, signature)).to.emit(nft, "PaletteSet").withArgs(1n, 1n,);
-      console.log(await nft.getPalette(1n));
 
       console.log({
         palettesAddress: p_address,
         paletteManagerAddress: await paletteManager.getAddress(),
         nftAddress: nft_address
       })
+
+      console.log(await nft.getPalette(1n));
+
       // console.log(await palettes.eip712Domain());
       // const [h, n, v, i,  c, s] = await palettes.eip712Domain();
       // //

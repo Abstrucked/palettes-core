@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 
 // import "./ColorConverter.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-//import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+//import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
@@ -17,15 +17,12 @@ import {PaletteMetadata} from "../libraries/PaletteMetadata.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IPaletteRenderer} from "./interfaces/IPaletteRenderer.sol";
 import {PaletteRenderer} from "./PaletteRenderer.sol";
-
+import {IPaletteManager} from "./interfaces/IPaletteManager.sol";
 import {console} from "hardhat/console.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 
-contract Palettes is IPalettes, Initializable, ERC721Upgradeable, AccessControlUpgradeable, UUPSUpgradeable {
-    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
-    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
-
+contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
+    address private MANAGER;
     error MaxSupplyReached();
     error IdNotFound();
 
@@ -48,22 +45,23 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, AccessControlU
 
     function initialize(address initialOwner) initializer public {
         __ERC721_init("Palettes", "PAL");
-        __AccessControl_init();
+        __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
 
     MAX_SUPPLY = 10000;
 //    renderer = PaletteRenderer(_renderer);
-        _grantRole(UPGRADER_ROLE, initialOwner);
-        _grantRole(OWNER_ROLE, initialOwner);
-//        _grantRole(MANAGER_ROLE, type(IUsePalette).interfaceId);
     }
 
 
     function _authorizeUpgrade(address newImplementation)
     internal
-    onlyRole(UPGRADER_ROLE)
+    onlyOwner
     override
     {}
+
+    function setPaletteManager(address managerContract) external onlyOwner {
+        MANAGER = managerContract;
+    }
 
     function mint() external returns (uint256){
         if (_tokenIdCounter >= MAX_SUPPLY) {
@@ -133,6 +131,8 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, AccessControlU
             IERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
             "Caller does not implement required interface"
         );
+        uint256 paletteId = IPaletteManager(MANAGER).getPaletteRecord(_tokenId, msg.sender);
+        require(paletteId > 0, "Palette not found");
         console.log("MSG_SENDER");
         console.log(msg.sender);
         require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
@@ -154,7 +154,7 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, AccessControlU
     function supportsInterface(bytes4 interfaceId)
     public
     view
-    override(ERC721Upgradeable, AccessControlUpgradeable)
+    override(ERC721Upgradeable)
     returns (bool)
     {
         return super.supportsInterface(interfaceId);

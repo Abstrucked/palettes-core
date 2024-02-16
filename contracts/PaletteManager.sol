@@ -77,6 +77,15 @@ contract PaletteManager is IPaletteManager, UUPSUpgradeable, OwnableUpgradeable,
 
     }
 
+    function getPaletteRecord(uint256 tokenId, address contractAddress) external view returns ( uint256){
+        console.log("GET_PALETTE::MSG_SENDER", msg.sender);
+        uint256 paletteId = _recordReverse[abi.encode(PaletteRecord(contractAddress, tokenId))];
+        console.log("GET_PALETTE::PALETTE_ID", paletteId);
+
+        require(paletteId > 0, "Palette not found");
+        return (paletteId);
+    }
+
     function getWebPalette(uint256 tokenId, address _contractAddress) external view returns (string[8] memory){
         uint256 paletteId = _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
         require(paletteId > 0, "Palette not found");
