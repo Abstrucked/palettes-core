@@ -91,4 +91,8 @@ contract PaletteManager is IPaletteManager, UUPSUpgradeable, OwnableUpgradeable,
         require(paletteId > 0, "Palette not found");
         return IPalettes(palettesContract).webPalette(paletteId);
     }
+
+    function getPaletteId(uint256 tokenId, address _contractAddress) external view returns (uint256){
+        return _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
+    }
 }
