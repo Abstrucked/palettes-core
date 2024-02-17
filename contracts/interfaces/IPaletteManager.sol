@@ -8,3 +8,4 @@ interface IPaletteManager {
 //    function getPaletteRecord(uint256 tokenId) external view returns (address, uint256);
     function getPaletteRecord(uint256 tokenId, address _contractAddress) external view returns (uint256);
     function getPaletteId(uint256 tokenId, address _contractAddress) external view returns (uint256);
+}
