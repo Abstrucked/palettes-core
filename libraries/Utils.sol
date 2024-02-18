@@ -2,6 +2,13 @@
 pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/Strings.sol";
 library Utils {
+    function bytes32toUint(bytes32 seed)
+    internal
+    pure
+    returns (uint256)
+    {
+        return uint256(keccak256(abi.encodePacked(seed))) % 524288;
+    }
 
     function random(string memory input) internal pure returns (uint256){
         return  uint256(keccak256(abi.encodePacked(input)));
