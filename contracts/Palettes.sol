@@ -135,7 +135,8 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
         require(paletteId > 0, "Palette not found");
         console.log("MSG_SENDER");
         console.log(msg.sender);
-        require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+        console.log(_tokenId, _tokenIdCounter, paletteId);
+        require(paletteId <= _tokenIdCounter, "TokenId does not exist");
 //        require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
         return PaletteRenderer.webPalette(_palettes[_tokenId]);
