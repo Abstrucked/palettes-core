@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
-import {IPaletteManager} from "./interfaces/IPaletteManager.sol";
+import {IManager} from "./interfaces/IManager.sol";
 import {Palettes} from "./Palettes.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
@@ -18,7 +18,7 @@ contract UsePalette is IUsePalette, ERC165 {
     function setPalette(uint256 tokenId, uint256 paletteId, bytes calldata signature) public {
         console.log("getPalette", address(this));
         console.logBytes( signature);
-        bool isSet = IPaletteManager(_paletteManager).setPaletteRecord(paletteId, address(this), tokenId, signature) ;
+        bool isSet = IManager(_paletteManager).setPaletteRecord(paletteId, address(this), tokenId, signature) ;
         if(isSet) {
             emit PaletteSet(tokenId, paletteId);
         }else {

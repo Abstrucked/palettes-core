@@ -4,7 +4,7 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import { Palettes } from "../Palettes.sol";
 import { UsePalette } from "../UsePalette.sol";
-import {IPaletteManager} from "../interfaces/IPaletteManager.sol";
+import {IManager} from "../interfaces/IManager.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 

@@ -6,13 +6,13 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {IPaletteManager} from "./interfaces/IPaletteManager.sol";
+import {IManager} from "./interfaces/IManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {console} from "hardhat/console.sol";
 
 
-contract PaletteManager is IPaletteManager, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
+contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
     address private palettesContract;
 
     struct PaletteRecord {
@@ -20,7 +20,7 @@ contract PaletteManager is IPaletteManager, UUPSUpgradeable, OwnableUpgradeable,
         uint256 tokenId;
     }
 
-    mapping(uint256 => PaletteRecord) private _records;
+//    mapping(uint256 => PaletteRecord) private _records;
     mapping(bytes => uint256) private _recordReverse;
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

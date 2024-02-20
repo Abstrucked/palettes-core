@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-interface IPaletteManager {
+interface IManager {
     event PaletteRecordSet(uint256 indexed paletteId, address indexed contractAddress, uint256 indexed tokenId);
 
     function setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId, bytes calldata signature) external returns (bool);

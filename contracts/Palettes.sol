@@ -17,7 +17,7 @@ import {PaletteMetadata} from "../libraries/PaletteMetadata.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IPaletteRenderer} from "./interfaces/IPaletteRenderer.sol";
 import {PaletteRenderer} from "./PaletteRenderer.sol";
-import {IPaletteManager} from "./interfaces/IPaletteManager.sol";
+import {IManager} from "./interfaces/IManager.sol";
 import {console} from "hardhat/console.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 
@@ -131,7 +131,7 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
             IERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
             "Caller does not implement required interface"
         );
-        uint256 paletteId = IPaletteManager(MANAGER).getPaletteRecord(_tokenId, msg.sender);
+        uint256 paletteId = IManager(MANAGER).getPaletteRecord(_tokenId, msg.sender);
         require(paletteId > 0, "Palette not found");
         console.log("MSG_SENDER");
         console.log(msg.sender);
