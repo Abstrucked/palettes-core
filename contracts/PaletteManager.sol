@@ -9,7 +9,7 @@ import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IStorage} from "./interfaces/IStorage.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {console} from "hardhat/console.sol";
-import {PalettesStorage} from "./PaletteStorage.sol";
+import {PaletteStorage} from "./PaletteStorage.sol";
 
 
 contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable {
@@ -52,15 +52,14 @@ contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable {
         address _contractAddress,
         uint256 _tokenId,
         bytes calldata signature
-    ) external returns (bool) {
+    ) external {
         // Call Storage contract to set the palette record
         IStorage(_storage).setPaletteRecord(paletteId, _contractAddress, _tokenId, signature);
-        return true;
-
     }
 
     function getPalette(uint256 tokenId) external view returns (string[8] memory){
         uint256 paletteId = getPaletteId(tokenId, msg.sender);
+        console.log("Manager::PaletteId", paletteId);
         require(paletteId > 0, "Palette not found");
 
         return IPalettes(_palettes).webPalette(paletteId, msg.sender);
@@ -68,5 +67,11 @@ contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable {
 
     function getPaletteId(uint256 tokenId, address _contractAddress) public view returns (uint256){
         return IStorage(_storage).getPaletteId(tokenId, _contractAddress);
+    }
+
+    function paletteOwner(uint256 paletteId) external view returns (address) {
+        require(paletteId < IPalettes(_palettes).minted(), "Palette not found!");
+        console.log("Palette Owner", IERC721(_palettes).ownerOf(paletteId));
+        return IERC721(_palettes).ownerOf(paletteId);
     }
 }

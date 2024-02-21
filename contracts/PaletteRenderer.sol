@@ -83,10 +83,10 @@ library PaletteRenderer {
             [
                 getBaseColor(_seed).value,
                 Colors.packRGB(b, r, g),
-                Colors.packRGB(g, r, b),
+                Colors.packRGB(g, b, r),
                 Colors.packRGB(cr, cg, cb),
                 Colors.packRGB(cb, cr, cg),
-                Colors.packRGB(cg, cr, cb),
+                Colors.packRGB(cg, cb, cr),
                 Colors.packRGB((r/5),(g/5),(b/5)),
                 Colors.packRGB((255-(cr/3)),(255-(cg/3)),(255-(cb/3)))
             ]

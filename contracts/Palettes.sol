@@ -128,12 +128,12 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
             IERC165(_contract).supportsInterface(type(IUsePalette).interfaceId),
             "Caller does not implement required interface"
         );
-        uint256 paletteId = IManager(MANAGER).getPaletteId(_tokenId, msg.sender);
+//        uint256 paletteId = IManager(MANAGER).getPaletteId(_tokenId, msg.sender);
         /// @dev Check if the paletteId is valid is done in the manager contract as well
-        require(paletteId > 0, "Palette not found");
+//        require(paletteId > 0, "Palette not found");
         console.log("MSG_SENDER");
         console.log(msg.sender);
-        require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
+//        require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
 //        require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
         return PaletteRenderer.webPalette(_palettes[_tokenId]);

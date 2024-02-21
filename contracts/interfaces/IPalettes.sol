@@ -37,4 +37,7 @@ interface IPalettes {
     /// @dev Returns the SVG image of the color palette for a specific token.
     function svg(uint256) external view returns(string memory);
 
-}
+    function minted() external view returns (uint256);
+
+
+ }

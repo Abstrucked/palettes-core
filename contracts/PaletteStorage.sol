@@ -13,9 +13,8 @@ import {console} from "hardhat/console.sol";
 import {IStorage} from "./interfaces/IStorage.sol";
 
 
-contract PalettesStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
-    address private palettesContract;
-    address private paletteManagerContract;
+contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
+    address private _manager;
 
     struct PaletteRecord {
         address contractAddress;
@@ -29,12 +28,10 @@ contract PalettesStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP71
         _disableInitializers();
     }
 
-    function initialize(address initialOwner, address contractAddress, address ) initializer public {
+    function initialize(address initialOwner) initializer public {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
         __EIP712_init("PaletteStorage", "1");
-        palettesContract = contractAddress;
-
     }
 
     function _authorizeUpgrade(address newImplementation)
@@ -54,7 +51,7 @@ contract PalettesStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP71
         address _contractAddress,
         uint256 _tokenId,
         bytes calldata signature
-    ) external returns (bool) {
+    ) external {
         console.log("setPaletteRecord");
         console.logBytes32(keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId))));
         address signer = ECDSA.recover(
@@ -70,21 +67,22 @@ contract PalettesStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP71
             ),
             signature
         );
-//        console.log(" Signer, Owner ");
-//        console.log(signer, IERC721(palettesContract).ownerOf(paletteId));
-//        if (signer != IERC721(palettesContract).ownerOf(paletteId) ) {
+        console.log(" Signer, Owner ");
+        console.log(signer);
+//        if (signer != IManager(_manager).paletteOwner(paletteId)) {
 //            revert("Not the owner of the token");
 //        }
         _setPaletteRecord(paletteId, _contractAddress, _tokenId);
-        return true;
-
     }
 
     function getPaletteId(uint256 tokenId, address contractAddress) external view returns ( uint256){
         /// check for gas efficiency here declare/re-call function.
         uint256 paletteId = _getPaletteId(tokenId, contractAddress);
-        require(paletteId > 0, "Palette not found");
-
+        console.log("Palette Id", paletteId);
+        if(paletteId == 0){
+            revert("Palette not found");
+        }
+        _getPaletteId(tokenId, contractAddress);
         return (paletteId);
     }
 

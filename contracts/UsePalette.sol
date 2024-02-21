@@ -15,12 +15,8 @@ contract UsePalette is IUsePalette, ERC165 {
     function setPalette(uint256 tokenId, uint256 paletteId, bytes calldata signature) public {
         console.log("getPalette", address(this));
         console.logBytes( signature);
-        bool isSet = IManager(_paletteManager).setPaletteRecord(paletteId, address(this), tokenId, signature) ;
-        if(isSet) {
-            emit PaletteSet(tokenId, paletteId);
-        }else {
-            revert("Invalid signature or not palette owner");
-        }
+        IManager(_paletteManager).setPaletteRecord(paletteId, address(this), tokenId, signature) ;
+
     }
 
     /// @dev Art tokenId to palette

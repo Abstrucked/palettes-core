@@ -6,5 +6,5 @@ interface IStorage {
 
 //    function getPaletteRecord(uint256 tokenId, address _contractAddress) external view returns (uint256);
     function getPaletteId(uint256 tokenId, address _contractAddress) external view returns (uint256);
-    function setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId, bytes calldata signature) external returns (bool);
+    function setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId, bytes calldata signature) external;
 }
