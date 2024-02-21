@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "../libraries/Utils.sol";
-import "./interfaces/IPaletteRenderer.sol";
+pragma solidity ^0.8.20;
+import {Utils} from  "../libraries/Utils.sol";
+import {Colors} from "../libraries/Colors.sol";
+import {IPalettes} from "./interfaces/IPalettes.sol";
 
-contract PaletteRenderer is IPaletteRenderer {
-    
+library PaletteRenderer {
     uint256 private constant SIZE = 1024;
 
-    function generateColor(bytes32 seed) 
+    function generateUintColor(bytes32 seed)
         private
         pure
         returns (uint256)
@@ -16,7 +15,9 @@ contract PaletteRenderer is IPaletteRenderer {
         return uint256(keccak256(abi.encodePacked(seed))) % 524288;
     }
 
-    function getColorComponentRed(uint256 value)
+
+
+    function getRed(uint256 value)
         internal
         pure
         returns (uint8)
@@ -24,7 +25,7 @@ contract PaletteRenderer is IPaletteRenderer {
         return uint8((value >> 8) & 0xff);
     }
 
-    function getColorComponentGreen(uint256 value)
+    function getGreen(uint256 value)
         internal
         pure
         returns (uint8)
@@ -32,7 +33,7 @@ contract PaletteRenderer is IPaletteRenderer {
         return uint8((value >> 4) & 0xff);
     }
 
-    function getColorComponentBlue(uint256 value)
+    function getBlue(uint256 value)
         internal
         pure
         returns (uint8)
@@ -44,114 +45,90 @@ contract PaletteRenderer is IPaletteRenderer {
      * @param seed of the token 
      * @return value of 'number'
      */
-    function getRGB(bytes32 seed) 
-        public
+    function getBaseColor(bytes32 seed)
+        internal 
         pure 
-        returns (uint8[3] memory)
+        returns (IPalettes.RGBColor memory)
     {
-        uint256 col = generateColor(bytes32(seed));
-        return [getColorComponentRed(col), getColorComponentGreen(col), getColorComponentBlue(col)];
+        uint256 col = generateUintColor(bytes32(seed));
+        return IPalettes.RGBColor(
+            Colors.packRGB(
+                getRed(col),
+                getGreen(col),
+                getBlue(col)
+            )
+        );
     }
 
      function getBasePalette(bytes32 _seed) 
-        public 
+        internal 
         pure 
-        returns (Color[8] memory)
+        returns (uint192)
     {
-        Color[8] memory palette;
-        uint256 baseColor = generateColor( _seed);
-        Color memory base = Color( 
-            getColorComponentRed(baseColor), 
-            getColorComponentGreen(baseColor), 
-            getColorComponentBlue(baseColor)
-        );
-        Color memory complementary = Color(
-            (255 - base.r),
-            (255 - base.g),
-            (255 - base.b)  
-        );
 
-        // Main Color
-        palette[0] = base;        
-        // Base Right Spectrum
-        palette[1] = Color(
-            (base.b),
-            (base.r),
-            (base.g)  
+        // Unpacked color placeholders
+        uint8 r;
+        uint8 g;
+        uint8 b;
+
+        // Get unpacked base color.
+        (r,g,b) = Colors.unpackRGB(getBaseColor(_seed).value);
+        uint8 cr = 255 - r;
+        uint8 cg = 255 - g;
+        uint8 cb = 255 - b;
+
+        return Colors.packPalette(
+            [
+                getBaseColor(_seed).value,
+                Colors.packRGB(b, r, g),
+                Colors.packRGB(g, b, r),
+                Colors.packRGB(cr, cg, cb),
+                Colors.packRGB(cb, cr, cg),
+                Colors.packRGB(cg, cb, cr),
+                Colors.packRGB((r/5),(g/5),(b/5)),
+                Colors.packRGB((255-(cr/3)),(255-(cg/3)),(255-(cb/3)))
+            ]
         );
-        
-        palette[2] = Color(
-            (255 - base.r),
-            (255 - base.g),
-            (255 - base.b)  
-        );
-        
-        // Base Left Spectrum
-        palette[3] = Color(
-            (base.g),
-            (base.r),
-            (base.b)  
-        );
-        // Base Right Spectrum
-        palette[4] = Color(
-            (complementary.b),
-            (complementary.r),
-            (complementary.g)  
-        );
-        // Base Left Spectrum
-        palette[5] = Color(
-            (complementary.g),
-            (complementary.r),
-            (complementary.b)  
-        );
-        // Dark
-        palette[6] = Color(
-            ((base.r/5)),
-            ((base.g/5)),
-            ((base.b/5))
-        );
-        // Light
-        palette[7] = Color(
-            (255-(complementary.r/3)),
-            (255-(complementary.r/3)),
-            (255-(complementary.r/3))
-        );
-        return palette;
     }
 
-    function getHex(Color memory rgb) 
-        public
+    function getHex(uint24 rgb)
+        internal 
         pure 
         returns(string memory) 
     {
-        string[3] memory  color;
-        color[0] = string(Utils.uintToHex(rgb.r));
-        color[1] = string(Utils.uintToHex(rgb.g));
-        color[2] = string(Utils.uintToHex(rgb.b));
-        // Add leading 0 if needed
-        bytes(color[0]).length == 1 ? string.concat(color[0], "0") : "";
-        bytes(color[1]).length == 1 ? string.concat(color[1], "0") : "";
-        bytes(color[2]).length == 1 ? string.concat(color[2], "0") : "";
-    return  string.concat("#", color[0], color[1], color[2]);
-    } 
+
+        bytes memory hexChars = "0123456789ABCDEF";
+
+        bytes memory hexString = new bytes(7);
+        hexString[0] = '#';
+
+        for (uint i = 0; i < 3; i++) {
+        hexString[2*i + 1] = hexChars[uint8(rgb >> (i*8 + 4)) & 0x0f];
+        hexString[2*i + 2] = hexChars[uint8(rgb >> (i*8)) & 0x0f];
+        }
+
+        return string(hexString);
+    }
 
     function webPalette(bytes32 seed)
-        public
+        internal 
         pure
         returns (string[8] memory)
     {
-        string[8] memory hexPalette;
-        Color[8] memory rgbPalette = getBasePalette(seed);
-        hexPalette[0] = getHex(rgbPalette[0]);
-        hexPalette[1] = getHex(rgbPalette[1]);
-        hexPalette[2] = getHex(rgbPalette[2]);
-        hexPalette[3] = getHex(rgbPalette[3]);
-        hexPalette[4] = getHex(rgbPalette[4]);
-        hexPalette[5] = getHex(rgbPalette[5]);
-        hexPalette[6] = getHex(rgbPalette[6]);
-        hexPalette[7] = getHex(rgbPalette[7]);
-        
-        return hexPalette;
+        uint192 rgbPalette = getBasePalette(seed);
+        return
+            [
+                getHex(Colors.unpackPaletteAt(rgbPalette,0)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,1)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,2)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,3)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,4)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,5)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,6)),
+                getHex(Colors.unpackPaletteAt(rgbPalette,7))
+            ];
+
+
     }
 
     function svgColors(bytes32 seed)
@@ -159,52 +136,40 @@ contract PaletteRenderer is IPaletteRenderer {
         pure
         returns (string memory) 
     {
-        Color[8] memory palette = getBasePalette(seed);
-        string memory colorTuple;
-        uint256 HEIGHT = SIZE/palette.length;
+        uint192 palette = getBasePalette(seed);
+        uint256 HEIGHT = SIZE/8;
         string memory renderSvg;
-        for(uint256 i=0; i<palette.length; i++) {
-            colorTuple = string.concat(
-                Utils.uint2str(palette[i].r),
-                ",",
-                Utils.uint2str(palette[i].g),
-                ",",
-                Utils.uint2str(palette[i].b)
-              );
+        for(uint8 i=0; i<8; i++) {
             renderSvg = string.concat(
                 renderSvg,
                 '<circle cy="',
-                    Utils.uint2str(SIZE/palette.length),
+                    Utils.uint2str(HEIGHT),
                     '" cx="',
-                    Utils.uint2str(i*HEIGHT+HEIGHT/2),
+                    Utils.uint2str((i*HEIGHT)+(HEIGHT/2)),
                     '" r="',
-                    Utils.uint2str(HEIGHT/2-1),
-                    '" fill="rgb(',
-                    colorTuple,
-                    ')"></circle>'
-                );
+                    Utils.uint2str((HEIGHT/2)-1),
+                    '" fill="',
+                    getHex(Colors.unpackPaletteAt(palette, i)),
+                '"></circle>'
+            );
         }
         return renderSvg;
     }
 
     function drawPalette(bytes32 _seed) 
-        public 
+        internal 
         pure 
-        returns (string memory) {
-        string memory renderSvg = string.concat(
-            '<svg width="',
-            Utils.uint2str(SIZE),
-            '" height="',
-            Utils.uint2str(SIZE/4),
-            '" viewBox="0 0 ',
-            Utils.uint2str(SIZE),
-            " ",
-            Utils.uint2str(SIZE/4),
-            '" xmlns="http://www.w3.org/2000/svg">'
-          );
-
-          renderSvg = string.concat(renderSvg, svgColors(_seed), "</svg>");
-
-          return renderSvg;
+        returns (string memory)
+    {
+        return string.concat(
+              '<svg width="',
+              Utils.uint2str(SIZE),
+              '" height="',
+              Utils.uint2str(SIZE/4),
+              '" viewBox="0 0 ',
+              Utils.uint2str(SIZE),
+              " ",
+              Utils.uint2str(SIZE/4),
+              '" xmlns="http://www.w3.org/2000/svg">', svgColors(_seed), "</svg>");
     }
 }
