@@ -6,23 +6,17 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {IManager} from "./interfaces/IManager.sol";
+import {PaletteManager} from "./PaletteManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {console} from "hardhat/console.sol";
 import {IStorage} from "./interfaces/IStorage.sol";
-
+import {IManager} from "./interfaces/IManager.sol";
+import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
-    address private _manager;
-
-    struct PaletteRecord {
-        address contractAddress;
-        uint256 tokenId;
-    }
-
-//    mapping(uint256 => PaletteRecord) private _records;
     mapping(bytes32 => uint256) private _hashToPaletteId;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -41,7 +35,6 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
     {}
 
     function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) private {
-//        _records[paletteId] = PaletteRecord(_contractAddress, _tokenId);
         _hashToPaletteId[keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId)))] = paletteId;
         emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
     }
@@ -52,6 +45,7 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
         uint256 _tokenId,
         bytes calldata signature
     ) external {
+        require(IERC165(msg.sender).supportsInterface(type(IManager).interfaceId), "Caller does not support IManager");
         console.log("setPaletteRecord");
         console.logBytes32(keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId))));
         address signer = ECDSA.recover(
@@ -67,11 +61,11 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
             ),
             signature
         );
-        console.log(" Signer, Owner ");
-        console.log(signer);
-//        if (signer != IManager(_manager).paletteOwner(paletteId)) {
-//            revert("Not the owner of the token");
-//        }
+        console.log(" log manager %s %s", msg.sender, signer, paletteId);
+        console.log("isOwner %s", IManager(msg.sender).isPaletteOwner(paletteId, signer));
+        if (!IManager(msg.sender).isPaletteOwner(paletteId, signer)) {
+            revert("Not the owner of the token");
+        }
         _setPaletteRecord(paletteId, _contractAddress, _tokenId);
     }
 

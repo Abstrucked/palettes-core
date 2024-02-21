@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../libraries/Utils.sol";
+import {Utils} from "../libraries/Utils.sol";
 import {PaletteMetadata} from "../libraries/PaletteMetadata.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IPaletteRenderer} from "./interfaces/IPaletteRenderer.sol";
@@ -19,21 +19,14 @@ import {console} from "hardhat/console.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 
 contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
-    address private MANAGER;
     error MaxSupplyReached();
     error IdNotFound();
 
     uint256 private _tokenIdCounter;
-
     uint256 public MAX_SUPPLY;
 
     mapping(uint256 => bytes32) private _palettes;
-//  PaletteRenderer public renderer;
 
-//  modifier onlyOwnerOf(uint256 tokenId) {
-//    require(ownerOf(tokenId) == msg.sender, "Not the owner of the token");
-//    _;
-//  }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -45,8 +38,7 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
 
-    MAX_SUPPLY = 10000;
-//    renderer = PaletteRenderer(_renderer);
+        MAX_SUPPLY = 10000;
     }
 
 
@@ -55,10 +47,6 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
     onlyOwner
     override
     {}
-
-    function setPaletteManager(address managerContract) external onlyOwner {
-        MANAGER = managerContract;
-    }
 
     function mint() external returns (uint256){
         if (_tokenIdCounter >= MAX_SUPPLY) {
@@ -76,9 +64,9 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 
     /**
      * @dev Generates a seed for a specific token.
-   * @param _tokenId The `tokenId` for this token.
-   * @return bytes32 The seed for a specific token.
-   */
+     * @param _tokenId The `tokenId` for this token.
+     * @return bytes32 The seed for a specific token.
+    */
     function _generateSeed(uint256 _tokenId) private view returns (bytes32){
         require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
         return Utils.randomBytes32(string(abi.encode(block.timestamp, msg.sender, (_tokenId))));
@@ -86,9 +74,9 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 
     /**
      * @dev Returns the the seed for a specific token.
-   * @param _tokenId The `tokenId` for this token.
-   * @return bytes32 The seed for a specific token.
-   */
+     * @param _tokenId The `tokenId` for this token.
+     * @return bytes32 The seed for a specific token.
+    */
     function getSeed(uint256 _tokenId) external view returns (bytes32){
         if (_tokenId > _tokenIdCounter) {
             revert IdNotFound();
@@ -98,9 +86,9 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 
     /**
      * @dev Returns the RBG color palette for a specific token.
-   * @param _tokenId The `tokenId` for this token.
-   * @return Color[8] The RBG color palette for a specific token.
-   */
+     * @param _tokenId The `tokenId` for this token.
+     * @return Color[8] The RBG color palette for a specific token.
+    */
     function rgbPalette(uint256 _tokenId) external view returns (uint24[8] memory) {
         require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
         require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
@@ -118,17 +106,21 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
             ];
     }
 
-    /**
-     * @dev Returns the hex color palette for a specific token.
+   /**
+   * @dev Returns the hex color palette for a specific token.
    * @param _tokenId The `tokenId` for this token.
    * @return string The hex color palette for a specific token.
    */
     function webPalette(uint256 _tokenId, address _contract) external view returns (string[8] memory)  {
         require(
-            IERC165(_contract).supportsInterface(type(IUsePalette).interfaceId),
-            "Caller does not implement required interface"
+            IERC165(msg.sender).supportsInterface(type(IManager).interfaceId),
+            "Caller does not implement IManager interface"
         );
-//        uint256 paletteId = IManager(MANAGER).getPaletteId(_tokenId, msg.sender);
+        require(
+            IERC165(_contract).supportsInterface(type(IUsePalette).interfaceId),
+            "Contract does not implement IUsePalette interface"
+        );
+
         /// @dev Check if the paletteId is valid is done in the manager contract as well
 //        require(paletteId > 0, "Palette not found");
         console.log("MSG_SENDER");
@@ -147,7 +139,6 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
         return super._update(to, tokenId, auth);
     }
 
-    // The following functions are overrides required by Solidity.
 
     function supportsInterface(bytes4 interfaceId)
     public
@@ -160,24 +151,24 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 
     /**
      * @dev Returns the SVG image of the color palette for a specific token.
-   * @param _tokenId The `tokenId` for this token.
-   * @return string The SVG image of the color palette for a specific token.
-   */
+    * @param _tokenId The `tokenId` for this token.
+    * @return string The SVG image of the color palette for a specific token.
+    */
     function svg(uint256 _tokenId) external view returns (string memory) {
         require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
         require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
         return PaletteRenderer.drawPalette(_palettes[_tokenId]);
     }
-//
-//
-//
-//  /**
-//   * @dev Calculates and returns the metadata for a specific token.
-//   * @param tokenId The `tokenId` for this token.
-//   * @return string The metadata for a specific token.
-//   * @notice Code snippet based on Checks - ChecksMetadata.sol {author: Jalil.eth}
-//   */
+
+
+
+    /**
+    * @dev Calculates and returns the metadata for a specific token.
+    * @param tokenId The `tokenId` for this token.
+    * @return string The metadata for a specific token.
+    * @notice Code snippet based on Checks - ChecksMetadata.sol {author: Jalil.eth}
+    */
     function tokenURI(uint256 tokenId)
     public
     view
@@ -188,59 +179,5 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
 
         return PaletteMetadata.tokenURI(tokenId, _palettes[tokenId]);
     }
-//
-//  /**
-//   * @dev Generate the SVG snipped for a for all attributes.
-//   * @param tokenId The `tokenId` for this token.
-//   * @return bytes The SVG snippet for the attributes.
-//   * @notice Code snippet based on Checks - ChecksMetadata.sol {author: Jalil.eth}
-//   */
-//  function attributes(uint256 tokenId) private view returns(bytes memory) {
-//    require(tokenId <= _tokenIdCounter, "TokenId does not exist");
-//    return abi.encodePacked(
-//      trait("Color 1", PaletteRenderer.webPalette(_palettes[tokenId]).colors[0], ","),
-//      trait("Color 2", PaletteRenderer.webPalette(_palettes[tokenId]).colors[1], ","),
-//      trait("Color 3", PaletteRenderer.webPalette(_palettes[tokenId]).colors[2], ","),
-//      trait("Color 4", PaletteRenderer.webPalette(_palettes[tokenId]).colors[3], ","),
-//      trait("Color 5", PaletteRenderer.webPalette(_palettes[tokenId]).colors[4], ","),
-//      trait("Color 6", PaletteRenderer.webPalette(_palettes[tokenId]).colors[5], ","),
-//      trait("Color 7", PaletteRenderer.webPalette(_palettes[tokenId]).colors[6], ","),
-//      trait("Color 8", PaletteRenderer.webPalette(_palettes[tokenId]).colors[7], "")
-//    );
-//  }
-
-    /// @dev Generate the SVG snipped for a single attribute.
-    /// @param traitType The `trait_type` for this trait.
-    /// @param traitValue The `value` for this trait.
-    /// @param append Helper to append a comma.
-    /// @return string The SVG snippet for the attribute.
-    /// @notice Code snippet from Checks - ChecksMetadata.sol {author: Jalil.eth}
-//  function trait(
-//    string memory traitType, string memory traitValue, string memory append
-//  ) public pure returns (string memory) {
-//    return string(abi.encodePacked(
-//      '{',
-//      '"trait_type": "', traitType, '",'
-//    '"value": "', traitValue, '"'
-//    '}',
-//      append
-//    ));
-//  }
-
-    /// @dev Modifier should check for the owner of the linkedToken is the same as the msg.sender from
-    /// the sender contract.
-//  modifier ownerOfLinkedToken(uint256 tokenId, address sender) {
-//    require(IERC721(_records[paletteId].contractAddress).ownerOf(_records[paletteId].tokenId) == msg.sender, "Not the owner of the token");
-//    _;
-//  }
-
-//  function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) internal  {
-//    _records[paletteId] = PaletteRecord(_contractAddress, _tokenId);
-//    _recordReverse[abi.encode(PaletteRecord(_contractAddress, _tokenId))] = paletteId;
-//  }
-
-
-
-
 
 }

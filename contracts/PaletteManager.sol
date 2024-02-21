@@ -1,27 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+
 import {IManager} from "./interfaces/IManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IStorage} from "./interfaces/IStorage.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {console} from "hardhat/console.sol";
-import {PaletteStorage} from "./PaletteStorage.sol";
 
 
-contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable {
+contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable {
     address private _palettes;
     address private _storage;
 
-    struct PaletteRecord {
-        address contractAddress;
-        uint256 tokenId;
-    }
-
-//    mapping(uint256 => PaletteRecord) private _records;
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -30,7 +25,6 @@ contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable {
     function initialize(address initialOwner, address palettesContract, address storageContract) initializer public {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-//        __EIP712_init("PaletteManager", "1"); ### EIP712Upgradeable is not used moved to PalettesStorage.sol
         _palettes = palettesContract;
         _storage = storageContract;
     }
@@ -40,12 +34,6 @@ contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable {
     onlyOwner
     override
     {}
-//
-//    function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) internal {
-////        _records[paletteId] = PaletteRecord(_contractAddress, _tokenId);
-//        _recordReverse[abi.encode(PaletteRecord(_contractAddress, _tokenId))] = paletteId;
-//        emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
-//    }
 
     function setPaletteRecord(
         uint256 paletteId,
@@ -69,9 +57,19 @@ contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable {
         return IStorage(_storage).getPaletteId(tokenId, _contractAddress);
     }
 
-    function paletteOwner(uint256 paletteId) external view returns (address) {
-        require(paletteId < IPalettes(_palettes).minted(), "Palette not found!");
-        console.log("Palette Owner", IERC721(_palettes).ownerOf(paletteId));
-        return IERC721(_palettes).ownerOf(paletteId);
+    function isPaletteOwner(uint256 paletteId, address signer) public view returns (bool) {
+        require(paletteId <= IPalettes(_palettes).minted(), "Palette not found!");
+        console.log("IPalettes(_palettes).ownerOf(paletteId)");
+        address owner = IERC721(_palettes).ownerOf(paletteId);
+        console.log(owner);
+        return owner == signer;
+    }
+
+    function getPalettesContract() external view returns (address) {
+        return _palettes;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
+        return interfaceId == type(IManager).interfaceId || super.supportsInterface(interfaceId);
     }
 }
