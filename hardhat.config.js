@@ -15,7 +15,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    currency: 'USD',
+    currency: 'ETH',
     showMethodSig: true,
     coinmarketcap: process.env.COINMARKETCAP_APIKEY,
     token: 'ETH',

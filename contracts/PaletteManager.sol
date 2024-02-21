@@ -1,37 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {IPaletteManager} from "./interfaces/IPaletteManager.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+
+import {IManager} from "./interfaces/IManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
+import {IStorage} from "./interfaces/IStorage.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {console} from "hardhat/console.sol";
 
 
-contract PaletteManager is IPaletteManager, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
-    address private palettesContract;
+contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable {
+    address private _palettes;
+    address private _storage;
 
-    struct PaletteRecord {
-        address contractAddress;
-        uint256 tokenId;
-    }
-
-    mapping(uint256 => PaletteRecord) private _records;
-    mapping(bytes => uint256) private _recordReverse;
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address initialOwner, address contractAddress) initializer public {
+    function initialize(address initialOwner, address palettesContract, address storageContract) initializer public {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        __EIP712_init("PaletteManager", "1");
-        palettesContract = contractAddress;
+        _palettes = palettesContract;
+        _storage = storageContract;
     }
 
     function _authorizeUpgrade(address newImplementation)
@@ -40,59 +35,41 @@ contract PaletteManager is IPaletteManager, UUPSUpgradeable, OwnableUpgradeable,
     override
     {}
 
-    function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) internal {
-//        _records[paletteId] = PaletteRecord(_contractAddress, _tokenId);
-        _recordReverse[abi.encode(PaletteRecord(_contractAddress, _tokenId))] = paletteId;
-        emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
-    }
-
     function setPaletteRecord(
         uint256 paletteId,
         address _contractAddress,
         uint256 _tokenId,
         bytes calldata signature
-    ) external returns (bool) {
-        console.log("setPaletteRecord");
-        console.log(bytes(abi.encode(PaletteRecord(_contractAddress, _tokenId))).length);
-        address signer = ECDSA.recover(
-            _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        keccak256("PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"),
-                        paletteId,
-                        _contractAddress,
-                        _tokenId
-                    )
-                )
-            ),
-            signature
-        );
-        console.log(" Signer, Owner ");
-        console.log(signer, IERC721(palettesContract).ownerOf(paletteId));
-        if (signer != IERC721(palettesContract).ownerOf(paletteId) ) {
-            revert("Not the owner of the token");
-        }
-        _setPaletteRecord(paletteId, _contractAddress, _tokenId);
-        return true;
-
+    ) external {
+        // Call Storage contract to set the palette record
+        IStorage(_storage).setPaletteRecord(paletteId, _contractAddress, _tokenId, signature);
     }
 
-    function getPaletteRecord(uint256 tokenId, address contractAddress) external view returns ( uint256){
-        console.log("GET_PALETTE::MSG_SENDER", msg.sender);
-        uint256 paletteId = _recordReverse[abi.encode(PaletteRecord(contractAddress, tokenId))];
-        console.log("GET_PALETTE::PALETTE_ID", paletteId);
-
+    function getPalette(uint256 tokenId) external view returns (string[8] memory){
+        uint256 paletteId = getPaletteId(tokenId, msg.sender);
+        console.log("Manager::PaletteId", paletteId);
         require(paletteId > 0, "Palette not found");
-        return (paletteId);
+
+        return IPalettes(_palettes).webPalette(paletteId, msg.sender);
     }
 
-    function getWebPalette(uint256 tokenId, address _contractAddress) external view returns (string[8] memory){
-        uint256 paletteId = _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
-        require(paletteId > 0, "Palette not found");
-        return IPalettes(palettesContract).webPalette(paletteId);
+    function getPaletteId(uint256 tokenId, address _contractAddress) public view returns (uint256){
+        return IStorage(_storage).getPaletteId(tokenId, _contractAddress);
     }
 
-    function getPaletteId(uint256 tokenId, address _contractAddress) external view returns (uint256){
-        return _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
+    function isPaletteOwner(uint256 paletteId, address signer) public view returns (bool) {
+        require(paletteId <= IPalettes(_palettes).minted(), "Palette not found!");
+        console.log("IPalettes(_palettes).ownerOf(paletteId)");
+        address owner = IERC721(_palettes).ownerOf(paletteId);
+        console.log(owner);
+        return owner == signer;
+    }
+
+    function getPalettesContract() external view returns (address) {
+        return _palettes;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
+        return interfaceId == type(IManager).interfaceId || super.supportsInterface(interfaceId);
     }
 }

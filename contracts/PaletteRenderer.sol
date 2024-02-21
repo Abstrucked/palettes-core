@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "../libraries/Utils.sol";
+import {Utils} from  "../libraries/Utils.sol";
 import {Colors} from "../libraries/Colors.sol";
-//import { IPaletteRenderer } from "./interfaces/IPaletteRenderer.sol";
-import { IPalettes } from "./interfaces/IPalettes.sol";
+import {IPalettes} from "./interfaces/IPalettes.sol";
 
 library PaletteRenderer {
     uint256 private constant SIZE = 1024;
@@ -19,7 +17,7 @@ library PaletteRenderer {
 
 
 
-    function getColorComponentRed(uint256 value)
+    function getRed(uint256 value)
         internal
         pure
         returns (uint8)
@@ -27,7 +25,7 @@ library PaletteRenderer {
         return uint8((value >> 8) & 0xff);
     }
 
-    function getColorComponentGreen(uint256 value)
+    function getGreen(uint256 value)
         internal
         pure
         returns (uint8)
@@ -35,7 +33,7 @@ library PaletteRenderer {
         return uint8((value >> 4) & 0xff);
     }
 
-    function getColorComponentBlue(uint256 value)
+    function getBlue(uint256 value)
         internal
         pure
         returns (uint8)
@@ -55,9 +53,9 @@ library PaletteRenderer {
         uint256 col = generateUintColor(bytes32(seed));
         return IPalettes.RGBColor(
             Colors.packRGB(
-                getColorComponentRed(col),
-                getColorComponentGreen(col),
-                getColorComponentBlue(col)
+                getRed(col),
+                getGreen(col),
+                getBlue(col)
             )
         );
     }
@@ -67,7 +65,6 @@ library PaletteRenderer {
         pure 
         returns (uint192)
     {
-        uint24[8] memory palette; // tmp storage
 
         // Unpacked color placeholders
         uint8 r;
@@ -84,32 +81,14 @@ library PaletteRenderer {
             [
                 getBaseColor(_seed).value,
                 Colors.packRGB(b, r, g),
-                Colors.packRGB(g, r, b),
+                Colors.packRGB(g, b, r),
                 Colors.packRGB(cr, cg, cb),
                 Colors.packRGB(cb, cr, cg),
-                Colors.packRGB(cg, cr, cb),
+                Colors.packRGB(cg, cb, cr),
                 Colors.packRGB((r/5),(g/5),(b/5)),
                 Colors.packRGB((255-(cr/3)),(255-(cg/3)),(255-(cb/3)))
             ]
         );
-
-//        // Set Base Color
-//        palette[0] = getBaseColor(_seed).value;
-//        // Base Right Spectrum
-//        palette[1] = Colors.packRGB(b, r, g);
-//        // Base Left Spectrum
-//        palette[3] = Colors.packRGB(g, r, b);
-//        // Dark
-//        palette[6] = Colors.packRGB((r/5),(g/5),(b/5));
-//        // Complementary Color
-//        palette[2] = Colors.unpackRGB(cr, cg, cb);
-//        // Complementary Right Spectrum
-//        palette[4] = Colors.packRGB(cb, cr, cg);
-//        // Complementary Left Spectrum
-//        palette[5] = Colors.packRGB(cg, cr, cb);
-//        // Light
-//        palette[7] = Colors.packRGB((255-(cr/3)),(255-(cg/3)),(255-(cb/3)));
-//        return IPalettes.RGBPalette(Colors.packPalette(palette));
     }
 
     function getHex(uint24 rgb)

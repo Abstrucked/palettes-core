@@ -15,13 +15,13 @@ library Colors {
     }
 
     function packPalette(uint24[8] memory values) internal pure returns (uint192 packed) {
-        for (uint i = 0; i < 8; i++) {
+        for (uint8 i = 0; i < 8; i++) {
             packed |= uint192(values[i]) << (24 * i);
         }
     }
 
     function unpackPalette(uint192 packed) internal pure returns (uint24[8] memory values) {
-        for (uint i = 0; i < 8; i++) {
+        for (uint8 i = 0; i < 8; i++) {
             values[i] = uint24(packed >> (24 * i));
         }
     }
