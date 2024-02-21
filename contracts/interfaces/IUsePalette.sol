@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
-import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 //import {IPalettes} from "./IPalettes.sol";
 
@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeabl
 */
 
 
-interface IUsePalette is IERC165Upgradeable{
+interface IUsePalette {
     event PaletteSet(uint256 indexed tokenId, uint256 indexed paletteId);
     function setPalette(uint256 tokenId, uint256 paletteId, bytes calldata signature) external;
     function getPalette(uint256 tokenId) external view returns (string[8] memory);

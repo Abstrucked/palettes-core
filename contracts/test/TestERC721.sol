@@ -13,7 +13,10 @@ import {console} from "hardhat/console.sol";
 contract TestERC721 is  ERC165, ERC721, UsePalette {
 
     uint256 public _tokenIdCounter;
-    constructor(address paletteManager, address palettes) ERC721("Test", "TST") UsePalette(paletteManager, palettes) {
+    constructor(address paletteManager)
+        ERC721("Test", "TST")
+        UsePalette(paletteManager)
+    {
         _tokenIdCounter++;
         _mint(msg.sender, _tokenIdCounter);
 

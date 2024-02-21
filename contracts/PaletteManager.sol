@@ -4,16 +4,17 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
+import {IStorage} from "./interfaces/IStorage.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {console} from "hardhat/console.sol";
+import {PalettesStorage} from "./PaletteStorage.sol";
 
 
-contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
-    address private palettesContract;
+contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable {
+    address private _palettes;
+    address private _storage;
 
     struct PaletteRecord {
         address contractAddress;
@@ -21,17 +22,17 @@ contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable, EIP712
     }
 
 //    mapping(uint256 => PaletteRecord) private _records;
-    mapping(bytes => uint256) private _recordReverse;
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address initialOwner, address contractAddress) initializer public {
+    function initialize(address initialOwner, address palettesContract, address storageContract) initializer public {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        __EIP712_init("PaletteManager", "1");
-        palettesContract = contractAddress;
+//        __EIP712_init("PaletteManager", "1"); ### EIP712Upgradeable is not used moved to PalettesStorage.sol
+        _palettes = palettesContract;
+        _storage = storageContract;
     }
 
     function _authorizeUpgrade(address newImplementation)
@@ -39,12 +40,12 @@ contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable, EIP712
     onlyOwner
     override
     {}
-
-    function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) internal {
-//        _records[paletteId] = PaletteRecord(_contractAddress, _tokenId);
-        _recordReverse[abi.encode(PaletteRecord(_contractAddress, _tokenId))] = paletteId;
-        emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
-    }
+//
+//    function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) internal {
+////        _records[paletteId] = PaletteRecord(_contractAddress, _tokenId);
+//        _recordReverse[abi.encode(PaletteRecord(_contractAddress, _tokenId))] = paletteId;
+//        emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
+//    }
 
     function setPaletteRecord(
         uint256 paletteId,
@@ -52,47 +53,20 @@ contract PaletteManager is IManager, UUPSUpgradeable, OwnableUpgradeable, EIP712
         uint256 _tokenId,
         bytes calldata signature
     ) external returns (bool) {
-        console.log("setPaletteRecord");
-        console.log(bytes(abi.encode(PaletteRecord(_contractAddress, _tokenId))).length);
-        address signer = ECDSA.recover(
-            _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        keccak256("PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"),
-                        paletteId,
-                        _contractAddress,
-                        _tokenId
-                    )
-                )
-            ),
-            signature
-        );
-        console.log(" Signer, Owner ");
-        console.log(signer, IERC721(palettesContract).ownerOf(paletteId));
-        if (signer != IERC721(palettesContract).ownerOf(paletteId) ) {
-            revert("Not the owner of the token");
-        }
-        _setPaletteRecord(paletteId, _contractAddress, _tokenId);
+        // Call Storage contract to set the palette record
+        IStorage(_storage).setPaletteRecord(paletteId, _contractAddress, _tokenId, signature);
         return true;
 
     }
 
-    function getPaletteRecord(uint256 tokenId, address contractAddress) external view returns ( uint256){
-        console.log("GET_PALETTE::MSG_SENDER", msg.sender);
-        uint256 paletteId = _recordReverse[abi.encode(PaletteRecord(contractAddress, tokenId))];
-        console.log("GET_PALETTE::PALETTE_ID", paletteId);
-
+    function getPalette(uint256 tokenId) external view returns (string[8] memory){
+        uint256 paletteId = getPaletteId(tokenId, msg.sender);
         require(paletteId > 0, "Palette not found");
-        return (paletteId);
+
+        return IPalettes(_palettes).webPalette(paletteId, msg.sender);
     }
 
-    function getWebPalette(uint256 tokenId, address _contractAddress) external view returns (string[8] memory){
-        uint256 paletteId = _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
-        require(paletteId > 0, "Palette not found");
-        return IPalettes(palettesContract).webPalette(paletteId);
-    }
-
-    function getPaletteId(uint256 tokenId, address _contractAddress) external view returns (uint256){
-        return _recordReverse[abi.encode(PaletteRecord(_contractAddress, tokenId))];
+    function getPaletteId(uint256 tokenId, address _contractAddress) public view returns (uint256){
+        return IStorage(_storage).getPaletteId(tokenId, _contractAddress);
     }
 }

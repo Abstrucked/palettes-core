@@ -64,7 +64,7 @@ describe("Palette contract", async () => {
         const tx1  = await palettes.mint();
         tx1.wait()
         // console.log(await palettes.svg((BigInt(i+1))))
-        // fs.writeFileSync(`palette${i+1}.svg`, await palettes.svg(i+1))
+        fs.writeFileSync(`palette${i+1}.svg`, await palettes.svg(i+1))
         // console.log(await palettes.webPalette(ethers.BigNumber.from(i+1)))
       }
       

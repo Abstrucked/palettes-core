@@ -67,7 +67,6 @@ library PaletteRenderer {
         pure 
         returns (uint192)
     {
-        uint24[8] memory palette; // tmp storage
 
         // Unpacked color placeholders
         uint8 r;

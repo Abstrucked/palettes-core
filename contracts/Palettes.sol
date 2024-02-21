@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// import "./ColorConverter.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-//import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IUsePalette} from "./interfaces/IUsePalette.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
@@ -126,12 +123,13 @@ contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgrade
    * @param _tokenId The `tokenId` for this token.
    * @return string The hex color palette for a specific token.
    */
-    function webPalette(uint256 _tokenId) external view returns (string[8] memory)  {
+    function webPalette(uint256 _tokenId, address _contract) external view returns (string[8] memory)  {
         require(
-            IERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
+            IERC165(_contract).supportsInterface(type(IUsePalette).interfaceId),
             "Caller does not implement required interface"
         );
-        uint256 paletteId = IManager(MANAGER).getPaletteRecord(_tokenId, msg.sender);
+        uint256 paletteId = IManager(MANAGER).getPaletteId(_tokenId, msg.sender);
+        /// @dev Check if the paletteId is valid is done in the manager contract as well
         require(paletteId > 0, "Palette not found");
         console.log("MSG_SENDER");
         console.log(msg.sender);

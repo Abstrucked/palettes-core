@@ -32,7 +32,7 @@ interface IPalettes {
 //    function rgbPalette(uint256) external view returns (RGBPalette memory);
 
     /// @dev Returns the hex color palette for a specific token.
-    function webPalette(uint256) external view returns (string[8] memory);
+    function webPalette(uint256, address) external view returns (string[8] memory);
 
     /// @dev Returns the SVG image of the color palette for a specific token.
     function svg(uint256) external view returns(string memory);
