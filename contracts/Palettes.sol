@@ -3,10 +3,8 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {Utils} from "../libraries/Utils.sol";
@@ -18,7 +16,7 @@ import {IManager} from "./interfaces/IManager.sol";
 import {console} from "hardhat/console.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 
-contract Palettes is IPalettes, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
+contract Palettes is IPalettes, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
     error MaxSupplyReached();
     error IdNotFound();
 
