@@ -4,10 +4,10 @@ pragma solidity ^0.8.20;
 import {IManager} from "./interfaces/IManager.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 import {ERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {console} from "hardhat/console.sol";
 
-
-
-abstract contract UsePaletteUpgradeable is IUsePalette, ERC165Upgradeable {
+abstract contract UsePaletteUpgradeable is Initializable, IUsePalette , ERC165Upgradeable {
     // keccak256(abi.encode(uint256(keccak256("abstrucked.palettes.UsePalettes")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant UsePaletteStorageLocation = 0x5e5e01030d43f956a4f78c931500ee10bc240d7c37ba5155e6f49067079dd500;
 
@@ -21,6 +21,8 @@ abstract contract UsePaletteUpgradeable is IUsePalette, ERC165Upgradeable {
         }
     }
     function __UsePalette_init(address paletteManager) internal onlyInitializing {
+        console.log("INIT::paletteManager");
+        console.log(paletteManager);
         __UsePalette_init_unchained(paletteManager);
     }
 
@@ -31,6 +33,7 @@ abstract contract UsePaletteUpgradeable is IUsePalette, ERC165Upgradeable {
 
     function setPalette(uint256 tokenId, uint256 paletteId, bytes calldata signature) public {
         UsePaletteStorage storage $ = _getUsePaletteStorage();
+        console.log($._paletteManager);
         IManager($._paletteManager).setPaletteRecord(paletteId, address(this), tokenId, signature);
     }
 
@@ -40,7 +43,7 @@ abstract contract UsePaletteUpgradeable is IUsePalette, ERC165Upgradeable {
         return IManager($._paletteManager).getPalette(tokenId);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IUsePalette).interfaceId || super.supportsInterface(interfaceId);
     }
 }

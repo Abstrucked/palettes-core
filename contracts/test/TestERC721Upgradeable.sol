@@ -10,7 +10,7 @@ import {IManager} from "../interfaces/IManager.sol";
 import {console} from "hardhat/console.sol";
 import {UsePaletteUpgradeable} from "../UsePaletteUpgradeable.sol";
 
-contract TestERC721 is  ERC165, ERC721Upgradeable, OwnableUpgradeable, UsePalette {
+contract TestERC721Upgradeable is  ERC165, ERC721Upgradeable, OwnableUpgradeable, UsePaletteUpgradeable {
     uint256 public MAX_SUPPLY;
     uint256 public _tokenIdCounter;
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -18,31 +18,18 @@ contract TestERC721 is  ERC165, ERC721Upgradeable, OwnableUpgradeable, UsePalett
         _disableInitializers();
     }
 
-    function initialize(address initialOwner) initializer public {
+    function initialize(address initialOwner, address paletteManager) initializer public {
         __ERC721_init("TestUpgradeable", "TESTUPGRADE");
         __Ownable_init(initialOwner);
-        __UUPSUpgradeable_init();
-
+        __UsePalette_init(paletteManager);
         MAX_SUPPLY = 10000;
         _tokenIdCounter++;
         _mint(msg.sender, _tokenIdCounter);
     }
-//    constructor()
-//        ERC721("Test", "TST")
-//        UsePalette(paletteManager)
-//    {
-//        _tokenIdCounter++;
-//        _mint(msg.sender, _tokenIdCounter);
-//
-//        console.log("StorageLocation");
-//        console.logBytes32(_storageLocation);
-//    }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Upgradeable, ERC165, UsePaletteUpgradeable) returns (bool) {
-        return super.supportsInterface(interfaceId);
+        return interfaceId == type(UsePaletteUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
-
-
 
     function mint() public {
         _tokenIdCounter++;

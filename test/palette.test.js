@@ -59,9 +59,9 @@ describe("Palette contract", async () => {
     // })
 
     it("Should mint a token with token ID 1 & 2 to account1", async function () {
-      const tx1  = await palettes.connect(account1).mint();
+      const tx1  = await palettes.connect(account1).mint(1n, {value: ethers.parseEther("0.01")});
       tx1.wait()
-      const tx2  = await palettes.connect(account1).mint();
+      const tx2  = await palettes.connect(account1).mint(1n, {value: ethers.parseEther("0.01")});
       tx2.wait()
 
       console.log(await palettes.tokenURI(1n))
@@ -71,7 +71,7 @@ describe("Palette contract", async () => {
     it("Should mint 10", async function () {
       const maxMint = 10;
       for( let i=0; i<maxMint; i++) {
-        const tx1  = await palettes.mint();
+        const tx1  = await palettes.mint(1n, {value: ethers.parseEther("0.01")});
         tx1.wait()
         fs.writeFileSync(`palette${i+1}.svg`, await palettes.svg(i+1))
         console.log(await palettes.svg(i+1))
@@ -85,7 +85,7 @@ describe("Palette contract", async () => {
       const nft = await NFT.deploy(await manager.getAddress());
       await nft.waitForDeployment();
 
-      await palettes.mint()
+      await palettes.mint(1n, {value: ethers.parseEther("0.01")})
       const nft_address = await nft.getAddress();
       const typedData = {
         types: {
@@ -131,10 +131,7 @@ describe("Palette contract", async () => {
         nftAddress: nft_address
       })
       const signature = await owner.signTypedData(typedData.domain, typedData.primaryType, typedData.message)
-      // const signature = await ethers.provider.send("eth_signTypedData_v4", [
-      //   await owner.getAddress(),
-      //   msgData
-      // ])
+
       console.log(signature)
       expect(await nft.setPalette(1n, 1n, signature)).to.emit(nft, "PaletteSet").withArgs(1n, 1n,);
 
@@ -147,12 +144,55 @@ describe("Palette contract", async () => {
       //
       console.log(await nft.getPalette(1n));
 
-      // console.log(await palettes.eip712Domain());
-      // const [h, n, v, i,  c, s] = await palettes.eip712Domain();
-      // //
-      // // const webPalette = await nft.getPalette(1n);
-      // // console.log(webPalette);
-      // return c === p_address;
+    });
+
+    it("Should deploy the TestERC721 contract", async function () {
+      const TestERC721 = await ethers.getContractFactory("TestERC721Upgradeable");
+      const testErc721 = await upgrades.deployProxy(TestERC721, [await owner.getAddress(), await manager.getAddress()]);
+      await testErc721.waitForDeployment();
+
+      await testErc721.mint()
+      await testErc721.mint()
+
+      await palettes.mint(1n, {value: ethers.parseEther("0.01")})
+
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "version", type: "string" },
+            { name: "chainId", type: "uint256" },
+            { name: "verifyingContract", type: "address" },
+            { name: "salt", type: "bytes32" }
+          ],
+          PaletteRecord: [
+            { name: "paletteId", type: "uint256" },
+            { name: "tokenId", type: "uint256" },
+          ],
+        },
+        primaryType: {
+          PaletteRecord: [
+            { name: "paletteId", type: "uint256" },
+            { name: "contractAddress", type: "address" },
+            { name: "tokenId", type: "uint256" },
+          ]
+        },
+        domain: {
+          name: "PaletteStorage",
+          version: "1",
+          chainId: BigInt(31337).toString(),
+          verifyingContract: await storage.getAddress(),
+        },
+        message: {
+          paletteId: 1n,
+          contractAddress: await testErc721.getAddress(),
+          tokenId: 1n,
+        },
+      };
+      const signature = await owner.signTypedData(typedData.domain, typedData.primaryType, typedData.message)
+
+      console.log(signature)
+      expect(await testErc721.setPalette(1n, 1n, signature)).to.emit(testErc721, "PaletteSet").withArgs(1n, 1n,);
     });
   });
 });

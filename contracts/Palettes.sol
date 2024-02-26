@@ -15,14 +15,15 @@ import {PaletteRenderer} from "./PaletteRenderer.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import {console} from "hardhat/console.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
+import {IErrors} from "./interfaces/IErrors.sol";
 
-contract Palettes is IPalettes, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
-    error MaxSupplyReached();
-    error IdNotFound();
+contract Palettes is IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
+
 
     uint256 private _tokenIdCounter;
     uint256 public MAX_SUPPLY;
-
+    uint256 public MAX_MINTABLE;
+    uint256 public PRICE;
     mapping(uint256 => bytes32) private _palettes;
 
 
@@ -37,6 +38,8 @@ contract Palettes is IPalettes, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgra
         __UUPSUpgradeable_init();
 
         MAX_SUPPLY = 10000;
+        MAX_MINTABLE = 20;
+        PRICE = 0.01 ether;
     }
 
 
@@ -46,14 +49,22 @@ contract Palettes is IPalettes, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgra
     override
     {}
 
-    function mint() external returns (uint256){
-        if (_tokenIdCounter >= MAX_SUPPLY) {
-            revert MaxSupplyReached();
+    /**
+     * @dev Mints a specific amount of tokens.
+     * @param amount The amount of tokens to mint.
+     * @return bool True if the minting was successful.
+    */
+    function mint(uint256 amount) external payable returns (bool){
+        require(amount > 0, "Amount must be greater than 0");
+        if(amount > MAX_MINTABLE) revert ExceedMaxMintable(MAX_MINTABLE);
+        if(_tokenIdCounter + amount > MAX_SUPPLY) revert MaxSupplyReached();
+        if(msg.value != amount * PRICE) revert IncorrectPrice(amount * PRICE);
+        for(uint8 i=0; i<amount; i++){
+            _tokenIdCounter++;
+            _safeMint(msg.sender, _tokenIdCounter);
+            _palettes[_tokenIdCounter] = _generateSeed(_tokenIdCounter);
         }
-        _tokenIdCounter++;
-        _palettes[_tokenIdCounter] = _generateSeed(_tokenIdCounter);
-        _safeMint(msg.sender, _tokenIdCounter);
-        return _tokenIdCounter;
+        return true;
     }
 
     function minted() external view returns (uint256){
