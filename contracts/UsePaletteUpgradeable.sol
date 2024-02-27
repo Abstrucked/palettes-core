@@ -43,6 +43,16 @@ abstract contract UsePaletteUpgradeable is Initializable, IUsePalette , ERC165Up
         return IManager($._paletteManager).getPalette(tokenId);
     }
 
+    function isPaletteSet(uint256 tokenId) public view returns (bool) {
+        UsePaletteStorage storage $ = _getUsePaletteStorage();
+        return IManager($._paletteManager).getPaletteId(tokenId, address(this)) > 0;
+    }
+
+    function getSetPaletteId(uint256 tokenId) public view returns (uint256) {
+        UsePaletteStorage storage $ = _getUsePaletteStorage();
+        return IManager($._paletteManager).getPaletteId(tokenId, address(this));
+    }
+
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IUsePalette).interfaceId || super.supportsInterface(interfaceId);
     }

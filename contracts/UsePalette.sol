@@ -25,6 +25,14 @@ contract UsePalette is IUsePalette, ERC165 {
         return IManager(_paletteManager).getPalette(tokenId);
     }
 
+    function isPaletteSet(uint256 tokenId) external view returns (bool) {
+        return IManager(_paletteManager).getPaletteId(tokenId, address(this)) > 0;
+    }
+
+    function getSetPaletteId(uint256 tokenId) external view returns (uint256) {
+        return IManager(_paletteManager).getPaletteId(tokenId, address(this));
+    }
+
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
         return interfaceId == type(IUsePalette).interfaceId || super.supportsInterface(interfaceId);
     }
