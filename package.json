@@ -1,6 +1,6 @@
 {
   "name": "palettes-erc721",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fully onchain autogenerative 8 color palettes",
   "main": "index.js",
   "scripts": {
