@@ -11,10 +11,7 @@ async function main() {
   const Utils = await hre.ethers.deployContract("Utils");
   await Utils.waitForDeployment();
 
-  const PaletteRenderer = await hre.ethers.deployContract("PaletteRenderer", {
-    libraries:{
-      Utils: await Utils.getAddress(),
-    }});
+  const PaletteRenderer = await hre.ethers.deployContract("PaletteRenderer");
   await PaletteRenderer.waitForDeployment();
   const Palettes = await hre.ethers.getContractFactory("Palettes");
   const palettes = await hre.upgrades.deployProxy(Palettes, [(await hre.ethers.getSigners())[0].address, await PaletteRenderer.getAddress()]);
