@@ -73,9 +73,9 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
         /// check for gas efficiency here declare/re-call function.
         uint256 paletteId = _getPaletteId(tokenId, contractAddress);
         console.log("Palette Id", paletteId);
-        if(paletteId == 0){
-            revert("Palette not found");
-        }
+//        if(paletteId == 0){
+//            revert("Palette not found");
+//        }
         _getPaletteId(tokenId, contractAddress);
         return (paletteId);
     }
