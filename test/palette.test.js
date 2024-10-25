@@ -69,14 +69,28 @@ describe("Palette contract", async () => {
     });
 
     it("Should mint 10", async function () {
+      let html = `<html>
+            <head>
+                <title>Test Palettes</title>
+                <style>
+                .box {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                }
+</style>
+            </head><body><div class="box">`
       const maxMint = 10;
       for( let i=0; i<maxMint; i++) {
         const tx1  = await palettes.mint(1n, {value: ethers.parseEther("0.01")});
         tx1.wait()
         fs.writeFileSync(`palette${i+1}.svg`, await palettes.svg(i+1))
+        html += await palettes.svg(i+1);
         console.log(await palettes.svg(i+1))
       }
-      
+
+      html +=  `</div></body></html>`;
+      fs.writeFileSync("test_palettes.html", html)
       expect( await palettes.minted()).to.equal( maxMint);
       
     });

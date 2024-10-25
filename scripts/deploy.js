@@ -14,7 +14,7 @@ async function main() {
   const PaletteRenderer = await hre.ethers.deployContract("PaletteRenderer");
   await PaletteRenderer.waitForDeployment();
   const Palettes = await hre.ethers.getContractFactory("Palettes");
-  const palettes = await hre.upgrades.deployProxy(Palettes, [(await hre.ethers.getSigners())[0].address, await PaletteRenderer.getAddress()]);
+  const palettes = await hre.upgrades.deployProxy(Palettes, [(await hre.ethers.getSigners())[0].address]);
   await palettes.waitForDeployment();
 
   console.log("Palette deployed to:", await palettes.getAddress());
