@@ -106,10 +106,63 @@ describe("Palette contract", async () => {
 
       console.log(signature)
       expect(await testERC721Upgradeable.setPalette(1n, 1n, signature)).to.emit(testERC721Upgradeable, "PaletteSet").withArgs(1n, 1n,);
+      console.log(await palettes.rgbPalette(1n))
+      const webPalette = await testERC721Upgradeable.getPalette(1n)
+      console.log(webPalette);
+// Function to unpack uint24 to RGB value
+      function uint24ToRgb(uint24) {
+        const red = (uint24 >> 16) & 0xFF;
+        const green = (uint24 >> 8) & 0xFF;
+        const blue = uint24 & 0xFF;
+        return {red, green, blue};
+      }
+
+// Example usage:
+      let rgbPalette1 = await palettes.rgbPalette(1n);
+      let rgbValues = rgbPalette1.map(col => uint24ToRgb(Number(col.toString())));
+      console.log(rgbValues);  // { red: R_VALUE, green: G_VALUE, blue: B_VALUE }
+      const hexString = rgbPalette1[0].toString(16);
+
+// Convert the hexadecimal string to a number
+      const decimalNumber = parseInt(hexString, 16);
+
+      console.log(decimalNumber);
+      console.log(uint24ToRgb(decimalNumber));
+
+      const hexColor = webPalette[0];
+
+// Extract the red, green, and blue components from the hexadecimal color code
+      const r = parseInt(hexColor.slice(1, 3), 16);
+      const g = parseInt(hexColor.slice(3, 5), 16);
+      const b = parseInt(hexColor.slice(5, 7), 16);
+
+      console.log(`HEX: ${webPalette[0]}, RGB: (${r}, ${g}, ${b})`);
+// Additional expectation/unittest (if necessary)
+//   expect(rgbValue).to.deep.equal({ red: EXPECTED_R, green: EXPECTED_G, blue: EXPECTED_B });
+//       expect(await testERC721Upgradeable.getPalette(tokenId)).to.equal(1n);
 
 
-      // expect(await testERC721Upgradeable.getPalette(tokenId)).to.equal(1n);
+      const hexNumbers = [
+        12440268n, 726804n,
+        9018312n, 10209417n,
+        13142427n, 7758903n,
+        6567798n, 3634788n
+      ];
 
+      const hexToRgb = (hexNumber) => {
+        const hexString = hexNumber.toString(16).padStart(6, '0'); // Convert BigInt to hex string and pad with zeroes if necessary
+        const r = parseInt(hexString.slice(0, 2), 16);
+        const g = parseInt(hexString.slice(2, 4), 16);
+        const b = parseInt(hexString.slice(4, 6), 16);
+        return `RGB: (${r}, ${g}, ${b})`;
+      };
+
+      const rgbNumbers = rgbPalette1.map(hexToRgb);
+
+      console.log(rgbNumbers.join('\n'));
+
+      console.log(await palettes.svg(1n))
+//
     })
 
 
