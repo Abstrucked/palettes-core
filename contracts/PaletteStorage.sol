@@ -14,7 +14,14 @@ import {IStorage} from "./interfaces/IStorage.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 
+/**
+ * @title PaletteStorage
+ * @dev Contract for managing palette storage and records.
+ * Inherits from IStorage, UUPSUpgradeable, OwnableUpgradeable, and EIP712Upgradeable.
+ * Author: Abstrucked.eth
+ */
 contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
+    /// @dev Mapping from hash to palette ID
     mapping(bytes32 => uint256) private _hashToPaletteId;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -22,23 +29,40 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
         _disableInitializers();
     }
 
-    function initialize(address initialOwner) initializer public {
+    /**
+     * @notice Initializes the contract with the given owner.
+     * @param initialOwner address The address of the initial owner.
+     */
+    function initialize(address initialOwner) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
         __EIP712_init("PaletteStorage", "1");
     }
 
-    function _authorizeUpgrade(address newImplementation)
-    internal
-    onlyOwner
-    override
-    {}
+    /**
+     * @notice Authorizes an upgrade to the new implementation.
+     * @param newImplementation address The address of the new implementation.
+     */
+    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
 
+    /**
+     * @dev Sets a palette record.
+     * @param paletteId uint256 The palette ID.
+     * @param _contractAddress address The contract address associated with the palette.
+     * @param _tokenId uint256 The token ID associated with the palette.
+     */
     function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) private {
         _hashToPaletteId[keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId)))] = paletteId;
         emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
     }
 
+    /**
+     * @notice Sets a palette record with a signature.
+     * @param paletteId uint256 The palette ID.
+     * @param _contractAddress address The contract address associated with the palette.
+     * @param _tokenId uint256 The token ID associated with the palette.
+     * @param signature bytes The signature to authorize the palette setting.
+     */
     function setPaletteRecord(
         uint256 paletteId,
         address _contractAddress,
@@ -61,7 +85,7 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
             ),
             signature
         );
-        console.log(" log manager %s %s", msg.sender, signer, paletteId);
+        console.log("log manager %s %s", msg.sender, signer, paletteId);
         console.log("isOwner %s", IManager(msg.sender).isPaletteOwner(paletteId, signer));
         if (!IManager(msg.sender).isPaletteOwner(paletteId, signer)) {
             revert("Not the owner of the token");
@@ -69,18 +93,38 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
         _setPaletteRecord(paletteId, _contractAddress, _tokenId);
     }
 
-    function getPaletteId(uint256 tokenId, address contractAddress) external view returns ( uint256){
+    /**
+     * @notice Gets the palette ID for a given token ID and contract address.
+     * @param tokenId uint256 The token ID.
+     * @param contractAddress address The contract address.
+     * @return uint256 The palette ID.
+     */
+    function getPaletteId(uint256 tokenId, address contractAddress) external view returns (uint256) {
         /// check for gas efficiency here declare/re-call function.
         uint256 paletteId = _getPaletteId(tokenId, contractAddress);
         console.log("Palette Id", paletteId);
-        if(paletteId == 0){
+        if (paletteId == 0) {
             revert("Palette not found");
         }
-        _getPaletteId(tokenId, contractAddress);
-        return (paletteId);
+        return paletteId;
     }
 
-    function _getPaletteId(uint256 tokenId, address _contractAddress) private view returns (uint256){
-        return _hashToPaletteId[keccak256(abi.encode(PaletteRecord(_contractAddress, tokenId)))];
+    /**
+     * @dev Gets the palette ID for a given token ID and contract address.
+     * @param tokenId uint256 The token ID.
+     * @param _contractAddress address The contract address.
+     * @return uint256 The palette ID.
+     */
+    function _getPaletteId(uint256 tokenId, address _contractAddress) private view returns (uint256) {
+        return _hashToPaletteId[
+            keccak256(
+                abi.encode(
+                    PaletteRecord(
+                        _contractAddress,
+                        tokenId
+                    )
+                )
+            )
+            ];
     }
 }
