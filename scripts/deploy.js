@@ -17,6 +17,7 @@ async function main() {
   const palettes = await hre.upgrades.deployProxy(Palettes, [(await hre.ethers.getSigners())[0].address]);
   await palettes.waitForDeployment();
 
+  
   console.log("Palette deployed to:", await palettes.getAddress());
 }
 

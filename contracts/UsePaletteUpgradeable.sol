@@ -7,52 +7,97 @@ import {ERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/intro
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {console} from "hardhat/console.sol";
 
-abstract contract UsePaletteUpgradeable is Initializable, IUsePalette , ERC165Upgradeable {
+/**
+ * @title UsePaletteUpgradeable
+ * @dev Abstract contract for managing palettes associated with token IDs.
+ * Inherits from Initializable, IUsePalette, and ERC165Upgradeable.
+ * Author: Abstrucked.eth
+ */
+abstract contract UsePaletteUpgradeable is Initializable, IUsePalette, ERC165Upgradeable {
     // keccak256(abi.encode(uint256(keccak256("abstrucked.palettes.UsePalettes")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant UsePaletteStorageLocation = 0x5e5e01030d43f956a4f78c931500ee10bc240d7c37ba5155e6f49067079dd500;
 
+    /// @dev Storage structure for UsePaletteUpgradeable
     struct UsePaletteStorage {
         address _paletteManager;
     }
 
-    function _getUsePaletteStorage() private pure returns (UsePaletteStorage storage $) {
+    /**
+     * @dev Private pure function to get the storage struct.
+     * @return s Storage reference for UsePaletteStorage.
+     */
+    function _getUsePaletteStorage() private pure returns (UsePaletteStorage storage s) {
         assembly {
-            $.slot := UsePaletteStorageLocation
+            s.slot := UsePaletteStorageLocation
         }
     }
+
+    /**
+     * @dev Initializer for UsePaletteUpgradeable.
+     * @param paletteManager address The address of the palette manager contract.
+     */
     function __UsePalette_init(address paletteManager) internal onlyInitializing {
         console.log("INIT::paletteManager");
         console.log(paletteManager);
         __UsePalette_init_unchained(paletteManager);
     }
 
+    /**
+     * @dev Unchained initializer for UsePaletteUpgradeable.
+     * @param paletteManager address The address of the palette manager contract.
+     */
     function __UsePalette_init_unchained(address paletteManager) internal onlyInitializing {
-        UsePaletteStorage storage $ = _getUsePaletteStorage();
-        $._paletteManager = paletteManager;
+        UsePaletteStorage storage s = _getUsePaletteStorage();
+        s._paletteManager = paletteManager;
     }
 
+    /**
+     * @notice Set a palette for a given token ID.
+     * @param tokenId uint256 The ID of the token.
+     * @param paletteId uint256 The ID of the palette.
+     * @param signature bytes The signature to authorize the palette setting.
+     */
     function setPalette(uint256 tokenId, uint256 paletteId, bytes calldata signature) public {
-        UsePaletteStorage storage $ = _getUsePaletteStorage();
-        console.log($._paletteManager);
-        IManager($._paletteManager).setPaletteRecord(paletteId, address(this), tokenId, signature);
+        UsePaletteStorage storage s = _getUsePaletteStorage();
+        console.log(s._paletteManager);
+        IManager(s._paletteManager).setPaletteRecord(paletteId, address(this), tokenId, signature);
     }
 
-    // @dev Art tokenId to palette
-    function getPalette(uint256 tokenId) public view returns (string[8] memory){
-        UsePaletteStorage storage $ = _getUsePaletteStorage();
-        return IManager($._paletteManager).getPalette(tokenId);
+    /**
+     * @notice Get the palette for a given token ID.
+     * @param tokenId uint256 The ID of the token.
+     * @return string[8] An array of strings representing the palette.
+     */
+    function getPalette(uint256 tokenId) public view returns (string[8] memory) {
+        UsePaletteStorage storage s = _getUsePaletteStorage();
+        return IManager(s._paletteManager).getPalette(tokenId);
     }
 
+    /**
+     * @notice Check if a palette is set for a given token ID.
+     * @param tokenId uint256 The ID of the token.
+     * @return bool A boolean indicating if the palette is set.
+     */
     function isPaletteSet(uint256 tokenId) public view returns (bool) {
-        UsePaletteStorage storage $ = _getUsePaletteStorage();
-        return IManager($._paletteManager).getPaletteId(tokenId, address(this)) > 0;
+        UsePaletteStorage storage s = _getUsePaletteStorage();
+        return IManager(s._paletteManager).getPaletteId(tokenId, address(this)) > 0;
     }
 
+    /**
+     * @notice Get the palette ID set for a given token ID.
+     * @param tokenId uint256 The ID of the token.
+     * @return uint256 The ID of the set palette.
+     */
     function getSetPaletteId(uint256 tokenId) public view returns (uint256) {
-        UsePaletteStorage storage $ = _getUsePaletteStorage();
-        return IManager($._paletteManager).getPaletteId(tokenId, address(this));
+        UsePaletteStorage storage s = _getUsePaletteStorage();
+        return IManager(s._paletteManager).getPaletteId(tokenId, address(this));
     }
 
+    /**
+     * @notice Check if the contract supports an interface.
+     * @param interfaceId bytes4 The interface ID to check.
+     * @return bool A boolean indicating if the interface is supported.
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IUsePalette).interfaceId || super.supportsInterface(interfaceId);
     }
