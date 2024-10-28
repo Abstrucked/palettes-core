@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 /**
  * @title Colors
@@ -34,23 +34,27 @@ library Colors {
     /**
      * @notice Packs an array of 8 uint24 RGB values into a single uint192 value.
      * @param values uint24[8] An array of 8 RGB values.
-     * @return uint192 The packed palette.
+     * @return packed uint192 The packed palette.
      */
     function packPalette(uint24[8] memory values) internal pure returns (uint192 packed) {
         for (uint8 i = 0; i < 8; i++) {
             packed |= uint192(values[i]) << (24 * i);
         }
+
+        return packed;
     }
 
     /**
      * @notice Unpacks a uint192 value into an array of 8 uint24 RGB values.
      * @param packed uint192 The packed palette.
-     * @return uint24[8] An array of 8 unpacked RGB values.
+     * @return values uint24[8] An array of 8 unpacked RGB values.
      */
     function unpackPalette(uint192 packed) internal pure returns (uint24[8] memory values) {
         for (uint8 i = 0; i < 8; i++) {
             values[i] = uint24(packed >> (24 * i));
         }
+
+        return values;
     }
 
     /**

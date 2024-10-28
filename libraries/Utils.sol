@@ -17,7 +17,7 @@ library Utils {
 
     /**
      * @notice Generates a pseudo-random uint256 based on the input string.
-     * @param input The input string to hash.
+     * @param input string The input string to hash.
      * @return uint256 The pseudo-random uint256 value.
      */
     function random(string memory input) internal pure returns (uint256) {
@@ -92,7 +92,7 @@ library Utils {
     /**
      * @notice Converts an unsigned integer to a string.
      * @param _i The unsigned integer to convert.
-     * @return string The string representation of the unsigned integer.
+     * @return _uintAsString string The string representation of the unsigned integer.
      */
     function uint2str(uint256 _i) internal pure returns (string memory _uintAsString) {
         if (_i == 0) {

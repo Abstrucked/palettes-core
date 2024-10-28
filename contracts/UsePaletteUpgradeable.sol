@@ -24,12 +24,14 @@ abstract contract UsePaletteUpgradeable is Initializable, IUsePalette, ERC165Upg
 
     /**
      * @dev Private pure function to get the storage struct.
-     * @return s Storage reference for UsePaletteStorage.
+     * @return $ Storage reference for UsePaletteStorage.
      */
-    function _getUsePaletteStorage() private pure returns (UsePaletteStorage storage s) {
+    function _getUsePaletteStorage() private pure returns (UsePaletteStorage storage $) {
         assembly {
-            s.slot := UsePaletteStorageLocation
+            $.slot := UsePaletteStorageLocation
         }
+
+        return $;
     }
 
     /**
