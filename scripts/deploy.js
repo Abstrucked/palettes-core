@@ -4,20 +4,40 @@
 // You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
-const hre = require("hardhat");
-
+const { ethers, upgrades } = require("hardhat");
 async function main() {
+  const [owner] = await ethers.getSigners();
+  // ---  LIBRARIES  ---
+  const utilsCF = await ethers.getContractFactory("Utils");
+  const utils = await utilsCF.deploy();
+  await utils.waitForDeployment();
+  const ColorsLib = await ethers.getContractFactory("Colors");
+  const colorsLib = await ColorsLib.deploy();
+  await colorsLib.waitForDeployment();
+  // ---------------------
 
-  const Utils = await hre.ethers.deployContract("Utils");
-  await Utils.waitForDeployment();
+  const Renderer = await ethers.getContractFactory("PaletteRenderer");
+  const renderer = await Renderer.deploy();
+  await renderer.waitForDeployment();
 
-  const PaletteRenderer = await hre.ethers.deployContract("PaletteRenderer");
-  await PaletteRenderer.waitForDeployment();
-  const Palettes = await hre.ethers.getContractFactory("Palettes");
-  const palettes = await hre.upgrades.deployProxy(Palettes, [(await hre.ethers.getSigners())[0].address]);
+  const Palettes = await ethers.getContractFactory("Palettes");
+  const palettes = await upgrades.deployProxy(Palettes, [owner.address]);
   await palettes.waitForDeployment();
 
+  const PaletteStorage = await ethers.getContractFactory("PaletteStorage");
+  storage = await upgrades.deployProxy(PaletteStorage, [owner.address]);
+  await storage.waitForDeployment();
+
+  const PaletteManager = await ethers.getContractFactory("PaletteManager");
+  manager = await upgrades.deployProxy(PaletteManager, [
+    owner.address,
+    await palettes.getAddress(),
+    await storage.getAddress(),
+  ]);
+  await manager.waitForDeployment();
   console.log("Palette deployed to:", await palettes.getAddress());
+  console.log("Manager deployed to:", await manager.getAddress());
+  console.log("Storage deployed to:", await storage.getAddress());
 }
 
 // We recommend this pattern to be able to use async/await everywhere

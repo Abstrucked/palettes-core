@@ -11,6 +11,7 @@ import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IStorage} from "./interfaces/IStorage.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {console} from "hardhat/console.sol";
+import {IUsePalette} from "./interfaces/IUsePalette.sol";
 
 /**
  * @title PaletteManager
@@ -18,7 +19,14 @@ import {console} from "hardhat/console.sol";
  * Inherits from ERC165, IManager, UUPSUpgradeable, and OwnableUpgradeable.
  * Author: Abstrucked.eth
  */
-contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable {
+contract PaletteManager is
+    ERC165,
+    IManager,
+    UUPSUpgradeable,
+    OwnableUpgradeable
+{
+    event StorageContractUpdated(address newAddress);
+
     /// @dev Address of the palettes contract
     address private _palettes;
 
@@ -34,20 +42,40 @@ contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable
      * @notice Initializes the contract with the given owner, palettes contract, and storage contract.
      * @param initialOwner address The address of the initial owner.
      * @param palettesContract address The address of the palettes contract.
-     * @param storageContract address The address of the storage contract.
      */
-    function initialize(address initialOwner, address palettesContract, address storageContract) public initializer {
+    function initialize(
+        address initialOwner,
+        address palettesContract
+    ) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
         _palettes = palettesContract;
-        _storage = storageContract;
     }
 
     /**
      * @notice Authorizes an upgrade to the new implementation.
      * @param newImplementation address The address of the new implementation.
      */
-    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
+
+    /**
+     * @notice Sets the address of the PaletteStorage contract.
+     * @dev Only the contract owner can call this.
+     * @param storageContractAddress address The address of the PaletteStorage contract.
+     */
+    function setStorageContract(
+        address storageContractAddress
+    ) external onlyOwner {
+        require(
+            storageContractAddress != address(0),
+            "Storage address cannot be zero"
+        );
+        _storage = storageContractAddress;
+        // Consider emitting an event for transparency
+        emit StorageContractUpdated(_storage);
+    }
 
     /**
      * @notice Sets a palette record in the storage contract.
@@ -62,8 +90,14 @@ contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable
         uint256 _tokenId,
         bytes calldata signature
     ) external {
+        require(_storage != address(0), "Storage contract not set.");
         // Call Storage contract to set the palette record
-        IStorage(_storage).setPaletteRecord(paletteId, _contractAddress, _tokenId, signature);
+        IStorage(_storage).setPaletteRecord(
+            paletteId,
+            _contractAddress,
+            _tokenId,
+            signature
+        );
     }
 
     /**
@@ -71,12 +105,38 @@ contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable
      * @param tokenId uint256 The token ID.
      * @return An array of hexadecimal color codes representing the palette.
      */
-    function getPalette(uint256 tokenId) external view returns (string[8] memory) {
+    function getPalette(
+        uint256 tokenId
+    ) external view returns (string[8] memory) {
+        require(
+            ERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
+            "PaletteManager: Caller does not implement IUsePalette interface"
+        );
         uint256 paletteId = getPaletteId(tokenId, msg.sender);
         console.log("Manager::PaletteId", paletteId);
         require(paletteId > 0, "Palette not found");
 
-        return IPalettes(_palettes).webPalette(paletteId, msg.sender);
+        return IPalettes(_palettes).webPalette(paletteId);
+    }
+
+    /**
+     * @notice Gets the palette for a given token ID.
+     * @param tokenId uint256 The token ID.
+     * @return An array of hexadecimal color codes representing the palette.
+     */
+    function getRGBPalette(
+        uint256 tokenId
+    ) external view returns (uint24[8] memory) {
+        require(
+            ERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
+            "PaletteManager: Caller does not implement IUsePalette interface"
+        );
+
+        uint256 paletteId = getPaletteId(tokenId, msg.sender);
+        console.log("Manager::PaletteId", paletteId);
+        require(paletteId > 0, "Palette not found");
+
+        return IPalettes(_palettes).rgbPalette(paletteId);
     }
 
     /**
@@ -85,7 +145,10 @@ contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable
      * @param _contractAddress address The contract address.
      * @return uint256 The palette ID.
      */
-    function getPaletteId(uint256 tokenId, address _contractAddress) public view returns (uint256) {
+    function getPaletteId(
+        uint256 tokenId,
+        address _contractAddress
+    ) public view returns (uint256) {
         return IStorage(_storage).getPaletteId(tokenId, _contractAddress);
     }
 
@@ -95,8 +158,14 @@ contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable
      * @param signer address The address to check ownership for.
      * @return bool True if the address is the owner of the palette ID, false otherwise.
      */
-    function isPaletteOwner(uint256 paletteId, address signer) public view returns (bool) {
-        require(paletteId <= IPalettes(_palettes).minted(), "Palette not found!");
+    function isPaletteOwner(
+        uint256 paletteId,
+        address signer
+    ) public view returns (bool) {
+        require(
+            paletteId <= IPalettes(_palettes).minted(),
+            "Palette not found!"
+        );
         console.log("IPalettes(_palettes).ownerOf(paletteId)");
         address owner = IERC721(_palettes).ownerOf(paletteId);
         console.log(owner);
@@ -116,7 +185,12 @@ contract PaletteManager is ERC165, IManager, UUPSUpgradeable, OwnableUpgradeable
      * @param interfaceId bytes4 The interface ID to check.
      * @return bool True if the interface is supported, false otherwise.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
-        return interfaceId == type(IManager).interfaceId || super.supportsInterface(interfaceId);
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165) returns (bool) {
+        return
+            interfaceId == type(IManager).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }
+

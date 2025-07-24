@@ -24,12 +24,18 @@ import {IErrors} from "./interfaces/IErrors.sol";
  * Inherits from IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable.
  * Author: Abstrucked.eth
  */
-contract Palettes is IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
-
+contract Palettes is
+    IErrors,
+    IPalettes,
+    ERC721Upgradeable,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     uint256 private _tokenIdCounter;
     uint256 public MAX_SUPPLY;
     uint256 public MAX_MINTABLE;
     uint256 public PRICE;
+    address public managerContractAddress;
     mapping(uint256 => bytes32) private _palettes;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -55,7 +61,20 @@ contract Palettes is IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, 
      * @notice Authorizes an upgrade to the new implementation.
      * @param newImplementation address The address of the new implementation.
      */
-    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
+
+    /**
+     * @notice Sets the address of the trusted PaletteManager contract.
+     * @dev Only the contract owner can call this.
+     * @param _newManager address The address of the PaletteManager contract.
+     */
+    function setManagerContractAddress(address _newManager) external onlyOwner {
+        require(_newManager != address(0), "Manager address cannot be zero");
+        managerContractAddress = _newManager;
+        // Consider emitting an event: event ManagerUpdated(address newManager);
+    }
 
     /**
      * @notice Mints a specific amount of tokens.
@@ -93,7 +112,10 @@ contract Palettes is IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, 
      */
     function _generateSeed(uint256 _tokenId) private view returns (bytes32) {
         require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
-        return Utils.randomBytes32(string(abi.encode(block.timestamp, msg.sender, (_tokenId))));
+        return
+            Utils.randomBytes32(
+                string(abi.encode(block.timestamp, msg.sender, (_tokenId)))
+            );
     }
 
     /**
@@ -113,41 +135,29 @@ contract Palettes is IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, 
      * @param _tokenId uint256 The `tokenId` for this token.
      * @return uint24[8] The RGB color palette for a specific token.
      */
-    function rgbPalette(uint256 _tokenId) external view returns (uint24[8] memory) {
-        require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
-        require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
+    function rgbPalette(
+        uint256 _tokenId
+    ) external view returns (uint24[8] memory) {
+        require(
+            msg.sender == managerContractAddress,
+            "Palettes: Access denied. Only Manager can call."
+        );
 
-        uint192 palette = PaletteRenderer.getBasePalette(_palettes[_tokenId]);
-        return [
-            uint24(palette >> 168),
-            uint24(palette >> 144),
-            uint24(palette >> 120),
-            uint24(palette >> 96),
-            uint24(palette >> 72),
-            uint24(palette >> 48),
-            uint24(palette >> 24),
-            uint24(palette)
-            ];
+        return PaletteRenderer.rgbPalette(_palettes[_tokenId]);
     }
 
     /**
      * @notice Returns the hex color palette for a specific token.
      * @param _tokenId uint256 The `tokenId` for this token.
-     * @param _contract address The address of the contract calling for the palette.
      * @return string[8] The hex color palette for a specific token.
      */
-    function webPalette(uint256 _tokenId, address _contract) external view returns (string[8] memory) {
+    function webPalette(
+        uint256 _tokenId
+    ) external view returns (string[8] memory) {
         require(
-            IERC165(msg.sender).supportsInterface(type(IManager).interfaceId),
-            "Caller does not implement IManager interface"
+            msg.sender == managerContractAddress,
+            "Palettes: Access denied. Only Manager can call."
         );
-        require(
-            IERC165(_contract).supportsInterface(type(IUsePalette).interfaceId),
-            "Contract does not implement IUsePalette interface"
-        );
-
-        console.log("MSG_SENDER");
-        console.log(msg.sender);
 
         return PaletteRenderer.webPalette(_palettes[_tokenId]);
     }
@@ -159,11 +169,11 @@ contract Palettes is IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, 
      * @param auth address The authorized address.
      * @return address The previous owner's address.
      */
-    function _update(address to, uint256 tokenId, address auth)
-    internal
-    override(ERC721Upgradeable)
-    returns (address)
-    {
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override(ERC721Upgradeable) returns (address) {
         return super._update(to, tokenId, auth);
     }
 
@@ -172,12 +182,9 @@ contract Palettes is IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, 
      * @param interfaceId bytes4 The interface ID to check.
      * @return bool True if the interface is supported, false otherwise.
      */
-    function supportsInterface(bytes4 interfaceId)
-    public
-    view
-    override(ERC721Upgradeable)
-    returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721Upgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -199,14 +206,12 @@ contract Palettes is IErrors, IPalettes, ERC721Upgradeable, OwnableUpgradeable, 
      * @return string The metadata for a specific token.
      * @notice Code snippet based on Checks - ChecksMetadata.sol {author: Jalil.eth}
      */
-    function tokenURI(uint256 tokenId)
-    public
-    view
-    override(ERC721Upgradeable)
-    returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721Upgradeable) returns (string memory) {
         require(tokenId <= _tokenIdCounter, "TokenId does not exist");
 
         return PaletteMetadata.tokenURI(tokenId, _palettes[tokenId]);
     }
 }
+

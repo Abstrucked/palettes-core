@@ -55,15 +55,14 @@ library PaletteRenderer {
      * @param seed bytes32 The seed value for generating the base color.
      * @return IPalettes.RGBColor The generated RGBColor structure.
      */
-    function getBaseColor(bytes32 seed) internal pure returns (IPalettes.RGBColor memory) {
+    function getBaseColor(
+        bytes32 seed
+    ) internal pure returns (IPalettes.RGBColor memory) {
         uint256 col = generateUintColor(bytes32(seed));
-        return IPalettes.RGBColor(
-            Colors.packRGB(
-                getRed(col),
-                getGreen(col),
-                getBlue(col)
-            )
-        );
+        return
+            IPalettes.RGBColor(
+                Colors.packRGB(getRed(col), getGreen(col), getBlue(col))
+            );
     }
 
     /**
@@ -83,18 +82,23 @@ library PaletteRenderer {
         uint8 cg = 255 - g;
         uint8 cb = 255 - b;
 
-        return Colors.packPalette(
-            [
-            getBaseColor(_seed).value,
-            Colors.packRGB(b, r, g),
-            Colors.packRGB(g, b, r),
-            Colors.packRGB(cr, cg, cb),
-            Colors.packRGB(cb, cr, cg),
-            Colors.packRGB(cg, cb, cr),
-            Colors.packRGB((r / 5), (g / 5), (b / 5)),
-            Colors.packRGB((255 - (cr / 3)), (255 - (cg / 3)), (255 - (cb / 3)))
-            ]
-        );
+        return
+            Colors.packPalette(
+                [
+                    getBaseColor(_seed).value,
+                    Colors.packRGB(b, r, g),
+                    Colors.packRGB(g, b, r),
+                    Colors.packRGB(cr, cg, cb),
+                    Colors.packRGB(cb, cr, cg),
+                    Colors.packRGB(cg, cb, cr),
+                    Colors.packRGB((r / 5), (g / 5), (b / 5)),
+                    Colors.packRGB(
+                        (255 - (cr / 3)),
+                        (255 - (cg / 3)),
+                        (255 - (cb / 3))
+                    )
+                ]
+            );
     }
 
     /**
@@ -105,10 +109,12 @@ library PaletteRenderer {
     function getHex(uint24 rgb) internal pure returns (string memory) {
         bytes memory hexChars = "0123456789ABCDEF";
         bytes memory hexString = new bytes(7);
-        hexString[0] = '#';
+        hexString[0] = "#";
         unchecked {
             for (uint i = 0; i < 3; i++) {
-                hexString[2 * i + 1] = hexChars[uint8(rgb >> (i * 8 + 4)) & 0x0f];
+                hexString[2 * i + 1] = hexChars[
+                    uint8(rgb >> (i * 8 + 4)) & 0x0f
+                ];
                 hexString[2 * i + 2] = hexChars[uint8(rgb >> (i * 8)) & 0x0f];
             }
         }
@@ -117,22 +123,43 @@ library PaletteRenderer {
     }
 
     /**
+     * @notice Returns the RGB color palette for a specific token.
+     * @param _seed bytes32 The `tokenId` for this token.
+     * @return uint24[8] The RGB color palette for a specific token.
+     */
+    function rgbPalette(
+        bytes32 _seed
+    ) internal pure returns (uint24[8] memory) {
+        uint192 palette = getBasePalette(_seed);
+        return [
+            uint24(palette >> 168),
+            uint24(palette >> 144),
+            uint24(palette >> 120),
+            uint24(palette >> 96),
+            uint24(palette >> 72),
+            uint24(palette >> 48),
+            uint24(palette >> 24),
+            uint24(palette)
+        ];
+    }
+
+    /**
      * @notice Generates a web-safe palette based on a seed value.
      * @param seed bytes32 The seed value for generating the palette.
      * @return string[8] An array of 8 hexadecimal color codes.
      */
     function webPalette(bytes32 seed) internal pure returns (string[8] memory) {
-        uint192 rgbPalette = getBasePalette(seed);
+        uint192 _rgbPalette = getBasePalette(seed);
         return [
-            getHex(Colors.unpackPaletteAt(rgbPalette, 0)),
-            getHex(Colors.unpackPaletteAt(rgbPalette, 1)),
-            getHex(Colors.unpackPaletteAt(rgbPalette, 2)),
-            getHex(Colors.unpackPaletteAt(rgbPalette, 3)),
-            getHex(Colors.unpackPaletteAt(rgbPalette, 4)),
-            getHex(Colors.unpackPaletteAt(rgbPalette, 5)),
-            getHex(Colors.unpackPaletteAt(rgbPalette, 6)),
-            getHex(Colors.unpackPaletteAt(rgbPalette, 7))
-            ];
+            getHex(Colors.unpackPaletteAt(_rgbPalette, 0)),
+            getHex(Colors.unpackPaletteAt(_rgbPalette, 1)),
+            getHex(Colors.unpackPaletteAt(_rgbPalette, 2)),
+            getHex(Colors.unpackPaletteAt(_rgbPalette, 3)),
+            getHex(Colors.unpackPaletteAt(_rgbPalette, 4)),
+            getHex(Colors.unpackPaletteAt(_rgbPalette, 5)),
+            getHex(Colors.unpackPaletteAt(_rgbPalette, 6)),
+            getHex(Colors.unpackPaletteAt(_rgbPalette, 7))
+        ];
     }
 
     /**
@@ -140,7 +167,7 @@ library PaletteRenderer {
      * @param seed bytes32 The seed value for generating the palette colors.
      * @return string The SVG string representation of the palette colors.
      */
-    function svgColors(bytes32 seed) private pure returns (string memory) {
+    function _svgColors(bytes32 seed) private pure returns (string memory) {
         uint192 palette = getBasePalette(seed);
         uint256 HEIGHT = SIZE / 8;
         string memory renderSvg;
@@ -169,18 +196,20 @@ library PaletteRenderer {
      * @return string The complete SVG string.
      */
     function drawPalette(bytes32 _seed) internal pure returns (string memory) {
-        return string.concat(
-            '<svg width="',
-            Utils.uint2str(SIZE),
-            '" height="',
-            Utils.uint2str(SIZE / 4),
-            '" viewBox="0 0 ',
-            Utils.uint2str(SIZE),
-            ' ',
-            Utils.uint2str(SIZE / 4),
-            '" xmlns="http://www.w3.org/2000/svg">',
-            svgColors(_seed),
-            '</svg>'
-        );
+        return
+            string.concat(
+                '<svg width="',
+                Utils.uint2str(SIZE),
+                '" height="',
+                Utils.uint2str(SIZE / 4),
+                '" viewBox="0 0 ',
+                Utils.uint2str(SIZE),
+                " ",
+                Utils.uint2str(SIZE / 4),
+                '" xmlns="http://www.w3.org/2000/svg">',
+                _svgColors(_seed),
+                "</svg>"
+            );
     }
 }
+

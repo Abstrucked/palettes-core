@@ -20,7 +20,14 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
  * Inherits from IStorage, UUPSUpgradeable, OwnableUpgradeable, and EIP712Upgradeable.
  * Author: Abstrucked.eth
  */
-contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
+contract PaletteStorage is
+    IStorage,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    EIP712Upgradeable
+{
+    address public managerContractAddress;
+
     /// @dev Mapping from hash to palette ID
     mapping(bytes32 => uint256) private _hashToPaletteId;
 
@@ -33,17 +40,23 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
      * @notice Initializes the contract with the given owner.
      * @param initialOwner address The address of the initial owner.
      */
-    function initialize(address initialOwner) public initializer {
+    function initialize(
+        address initialOwner,
+        address _managerContractAddress
+    ) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
         __EIP712_init("PaletteStorage", "1");
+        managerContractAddress = _managerContractAddress;
     }
 
     /**
      * @notice Authorizes an upgrade to the new implementation.
      * @param newImplementation address The address of the new implementation.
      */
-    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
 
     /**
      * @dev Sets a palette record.
@@ -51,8 +64,14 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
      * @param _contractAddress address The contract address associated with the palette.
      * @param _tokenId uint256 The token ID associated with the palette.
      */
-    function _setPaletteRecord(uint256 paletteId, address _contractAddress, uint256 _tokenId) private {
-        _hashToPaletteId[keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId)))] = paletteId;
+    function _setPaletteRecord(
+        uint256 paletteId,
+        address _contractAddress,
+        uint256 _tokenId
+    ) private {
+        _hashToPaletteId[
+            keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId)))
+        ] = paletteId;
         emit PaletteRecordSet(paletteId, _contractAddress, _tokenId);
     }
 
@@ -69,14 +88,21 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
         uint256 _tokenId,
         bytes calldata signature
     ) external {
-        require(IERC165(msg.sender).supportsInterface(type(IManager).interfaceId), "Caller does not support IManager");
+        require(
+            msg.sender == managerContractAddress,
+            "PaletteStorage: Access denied. Only the trusted Manager can call."
+        );
         console.log("setPaletteRecord");
-        console.logBytes32(keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId))));
+        console.logBytes32(
+            keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId)))
+        );
         address signer = ECDSA.recover(
             _hashTypedDataV4(
                 keccak256(
                     abi.encode(
-                        keccak256("PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"),
+                        keccak256(
+                            "PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"
+                        ),
                         paletteId,
                         _contractAddress,
                         _tokenId
@@ -86,7 +112,10 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
             signature
         );
         console.log("log manager %s %s", msg.sender, signer, paletteId);
-        console.log("isOwner %s", IManager(msg.sender).isPaletteOwner(paletteId, signer));
+        console.log(
+            "isOwner %s",
+            IManager(msg.sender).isPaletteOwner(paletteId, signer)
+        );
         if (!IManager(msg.sender).isPaletteOwner(paletteId, signer)) {
             revert("Not the owner of the token");
         }
@@ -99,7 +128,10 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
      * @param contractAddress address The contract address.
      * @return uint256 The palette ID.
      */
-    function getPaletteId(uint256 tokenId, address contractAddress) external view returns (uint256) {
+    function getPaletteId(
+        uint256 tokenId,
+        address contractAddress
+    ) external view returns (uint256) {
         /// check for gas efficiency here declare/re-call function.
         uint256 paletteId = _getPaletteId(tokenId, contractAddress);
         console.log("Palette Id", paletteId);
@@ -115,16 +147,14 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable, EIP712
      * @param _contractAddress address The contract address.
      * @return uint256 The palette ID.
      */
-    function _getPaletteId(uint256 tokenId, address _contractAddress) private view returns (uint256) {
-        return _hashToPaletteId[
-            keccak256(
-                abi.encode(
-                    PaletteRecord(
-                        _contractAddress,
-                        tokenId
-                    )
-                )
-            )
+    function _getPaletteId(
+        uint256 tokenId,
+        address _contractAddress
+    ) private view returns (uint256) {
+        return
+            _hashToPaletteId[
+                keccak256(abi.encode(PaletteRecord(_contractAddress, tokenId)))
             ];
     }
 }
+

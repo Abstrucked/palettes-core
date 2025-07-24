@@ -29,7 +29,11 @@ contract UsePalette is IUsePalette, ERC165 {
      * @param paletteId uint256 The ID of the palette.
      * @param signature bytes The signature to authorize the palette setting.
      */
-    function setPalette(uint256 tokenId, uint256 paletteId, bytes calldata signature) public {
+    function setPalette(
+        uint256 tokenId,
+        uint256 paletteId,
+        bytes calldata signature
+    ) public {
         console.log("getPalette", address(this));
         console.logBytes(signature);
 
@@ -46,8 +50,21 @@ contract UsePalette is IUsePalette, ERC165 {
      * @param tokenId uint256 The ID of the token.
      * @return string[8] An array of strings representing the palette.
      */
-    function getPalette(uint256 tokenId) public view returns (string[8] memory) {
+    function getPalette(
+        uint256 tokenId
+    ) public view returns (string[8] memory) {
         return IManager(_paletteManager).getPalette(tokenId);
+    }
+
+    /**
+     * @notice Get the palette for a given token ID.
+     * @param tokenId uint256 The ID of the token.
+     * @return string[8] An array of strings representing the palette.
+     */
+    function getRGBPalette(
+        uint256 tokenId
+    ) public view returns (uint24[8] memory) {
+        return IManager(_paletteManager).getRGBPalette(tokenId);
     }
 
     /**
@@ -56,7 +73,8 @@ contract UsePalette is IUsePalette, ERC165 {
      * @return bool A boolean indicating if the palette is set.
      */
     function isPaletteSet(uint256 tokenId) external view returns (bool) {
-        return IManager(_paletteManager).getPaletteId(tokenId, address(this)) > 0;
+        return
+            IManager(_paletteManager).getPaletteId(tokenId, address(this)) > 0;
     }
 
     /**
@@ -73,7 +91,11 @@ contract UsePalette is IUsePalette, ERC165 {
      * @param interfaceId bytes4 The interface ID to check.
      * @return bool A boolean indicating if the interface is supported.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
-        return interfaceId == type(IUsePalette).interfaceId || super.supportsInterface(interfaceId);
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165) returns (bool) {
+        return
+            interfaceId == type(IUsePalette).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }
