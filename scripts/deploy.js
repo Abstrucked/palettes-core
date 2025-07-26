@@ -24,17 +24,23 @@ async function main() {
   const palettes = await upgrades.deployProxy(Palettes, [owner.address]);
   await palettes.waitForDeployment();
 
-  const PaletteStorage = await ethers.getContractFactory("PaletteStorage");
-  storage = await upgrades.deployProxy(PaletteStorage, [owner.address]);
-  await storage.waitForDeployment();
-
   const PaletteManager = await ethers.getContractFactory("PaletteManager");
   manager = await upgrades.deployProxy(PaletteManager, [
     owner.address,
     await palettes.getAddress(),
-    await storage.getAddress(),
   ]);
   await manager.waitForDeployment();
+
+  const PaletteStorage = await ethers.getContractFactory("PaletteStorage");
+  storage = await upgrades.deployProxy(PaletteStorage, [
+    owner.address,
+    await manager.getAddress(),
+  ]);
+  await storage.waitForDeployment();
+
+  await manager.setStorageContract(await manager.getAddress());
+  await palettes.setManagerContractAddress(await manager.getAddress());
+
   console.log("Palette deployed to:", await palettes.getAddress());
   console.log("Manager deployed to:", await manager.getAddress());
   console.log("Storage deployed to:", await storage.getAddress());

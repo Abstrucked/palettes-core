@@ -45,6 +45,7 @@ describe("Palette contract", async () => {
     await storage.waitForDeployment();
 
     await manager.setStorageContract(await storage.getAddress());
+    await palettes.setPrice(ethers.parseEther("0.01"));
   });
 
   describe("Should Deploy", async function () {
@@ -240,4 +241,3 @@ describe("Palette contract", async () => {
     });
   });
 });
-

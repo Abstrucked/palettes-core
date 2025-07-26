@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {console} from "hardhat/console.sol";
 
 /**
  * @title UsePalette
@@ -34,9 +33,6 @@ contract UsePalette is IUsePalette, ERC165 {
         uint256 paletteId,
         bytes calldata signature
     ) public {
-        console.log("getPalette", address(this));
-        console.logBytes(signature);
-
         IManager(_paletteManager).setPaletteRecord(
             paletteId,
             address(this),

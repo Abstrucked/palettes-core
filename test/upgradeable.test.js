@@ -45,6 +45,7 @@ describe("Palette contract", async () => {
 
     await manager.setStorageContract(await storage.getAddress());
 
+    await palettes.setPrice(ethers.parseEther("0.01"));
     await palettes.mint(2n, { value: ethers.parseEther("0.02") });
 
     const TestERC721Upgradeable = await ethers.getContractFactory(
@@ -188,4 +189,3 @@ describe("Palette contract", async () => {
     });
   });
 });
-

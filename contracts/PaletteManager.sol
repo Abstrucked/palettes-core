@@ -10,7 +10,6 @@ import {IManager} from "./interfaces/IManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IStorage} from "./interfaces/IStorage.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {console} from "hardhat/console.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 
 /**
@@ -113,7 +112,6 @@ contract PaletteManager is
             "PaletteManager: Caller does not implement IUsePalette interface"
         );
         uint256 paletteId = getPaletteId(tokenId, msg.sender);
-        console.log("Manager::PaletteId", paletteId);
         require(paletteId > 0, "Palette not found");
 
         return IPalettes(_palettes).webPalette(paletteId);
@@ -133,7 +131,6 @@ contract PaletteManager is
         );
 
         uint256 paletteId = getPaletteId(tokenId, msg.sender);
-        console.log("Manager::PaletteId", paletteId);
         require(paletteId > 0, "Palette not found");
 
         return IPalettes(_palettes).rgbPalette(paletteId);
@@ -166,9 +163,7 @@ contract PaletteManager is
             paletteId <= IPalettes(_palettes).minted(),
             "Palette not found!"
         );
-        console.log("IPalettes(_palettes).ownerOf(paletteId)");
         address owner = IERC721(_palettes).ownerOf(paletteId);
-        console.log(owner);
         return owner == signer;
     }
 
@@ -193,4 +188,3 @@ contract PaletteManager is
             super.supportsInterface(interfaceId);
     }
 }
-

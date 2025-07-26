@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Utils} from "../libraries/Utils.sol";
 import {Colors} from "../libraries/Colors.sol";
-import {IPalettes} from "./interfaces/IPalettes.sol";
+import {IPalettes} from "../contracts/interfaces/IPalettes.sol";
 
 /**
  * @title PaletteRenderer
@@ -212,4 +212,3 @@ library PaletteRenderer {
             );
     }
 }
-

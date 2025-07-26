@@ -5,7 +5,6 @@ import {IManager} from "./interfaces/IManager.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 import {ERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {console} from "hardhat/console.sol";
 
 /**
  * @title UsePaletteUpgradeable
@@ -50,8 +49,6 @@ abstract contract UsePaletteUpgradeable is
     function __UsePalette_init(
         address paletteManager
     ) internal onlyInitializing {
-        console.log("INIT::paletteManager");
-        console.log(paletteManager);
         __UsePalette_init_unchained(paletteManager);
     }
 
@@ -78,7 +75,6 @@ abstract contract UsePaletteUpgradeable is
         bytes calldata signature
     ) public {
         UsePaletteStorage storage s = _getUsePaletteStorage();
-        console.log(s._paletteManager);
         IManager(s._paletteManager).setPaletteRecord(
             paletteId,
             address(this),
@@ -146,4 +142,3 @@ abstract contract UsePaletteUpgradeable is
             super.supportsInterface(interfaceId);
     }
 }
-

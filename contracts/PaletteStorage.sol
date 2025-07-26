@@ -9,7 +9,6 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {PaletteManager} from "./PaletteManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {console} from "hardhat/console.sol";
 import {IStorage} from "./interfaces/IStorage.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
@@ -92,10 +91,6 @@ contract PaletteStorage is
             msg.sender == managerContractAddress,
             "PaletteStorage: Access denied. Only the trusted Manager can call."
         );
-        console.log("setPaletteRecord");
-        console.logBytes32(
-            keccak256(abi.encode(PaletteRecord(_contractAddress, _tokenId)))
-        );
         address signer = ECDSA.recover(
             _hashTypedDataV4(
                 keccak256(
@@ -110,11 +105,6 @@ contract PaletteStorage is
                 )
             ),
             signature
-        );
-        console.log("log manager %s %s", msg.sender, signer, paletteId);
-        console.log(
-            "isOwner %s",
-            IManager(msg.sender).isPaletteOwner(paletteId, signer)
         );
         if (!IManager(msg.sender).isPaletteOwner(paletteId, signer)) {
             revert("Not the owner of the token");
@@ -134,7 +124,6 @@ contract PaletteStorage is
     ) external view returns (uint256) {
         /// check for gas efficiency here declare/re-call function.
         uint256 paletteId = _getPaletteId(tokenId, contractAddress);
-        console.log("Palette Id", paletteId);
         if (paletteId == 0) {
             revert("Palette not found");
         }
@@ -157,4 +146,3 @@ contract PaletteStorage is
             ];
     }
 }
-

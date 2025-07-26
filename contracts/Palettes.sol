@@ -11,9 +11,8 @@ import {Utils} from "../libraries/Utils.sol";
 import {PaletteMetadata} from "../libraries/PaletteMetadata.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IPaletteRenderer} from "./interfaces/IPaletteRenderer.sol";
-import {PaletteRenderer} from "./PaletteRenderer.sol";
+import {PaletteRenderer} from "../libraries/PaletteRenderer.sol";
 import {IManager} from "./interfaces/IManager.sol";
-import {console} from "hardhat/console.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 import {IErrors} from "./interfaces/IErrors.sol";
 
@@ -31,10 +30,12 @@ contract Palettes is
     OwnableUpgradeable,
     UUPSUpgradeable
 {
+    event PriceChanged(uint256);
+
     uint256 private _tokenIdCounter;
     uint256 public MAX_SUPPLY;
     uint256 public MAX_MINTABLE;
-    uint256 public PRICE;
+    uint256 public price;
     address public managerContractAddress;
     mapping(uint256 => bytes32) private _palettes;
 
@@ -44,7 +45,7 @@ contract Palettes is
     }
 
     /**
-     * @notice Initializes the contract with the given owner, MAX_SUPPLY, MAX_MINTABLE, and PRICE.
+     * @notice Initializes the contract with the given owner, MAX_SUPPLY, MAX_MINTABLE, and price.
      * @param initialOwner address The address of the initial owner.
      */
     function initialize(address initialOwner) public initializer {
@@ -54,7 +55,7 @@ contract Palettes is
 
         MAX_SUPPLY = 10000;
         MAX_MINTABLE = 20;
-        PRICE = 0.01 ether;
+        price = 0.005 ether;
     }
 
     /**
@@ -64,6 +65,16 @@ contract Palettes is
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
+
+    /**
+     * @notice Sets the new minting price.
+     * @dev Only the contract owner can call this.
+     * @param _newPrice uint256 The new price.
+     */
+    function setPrice(uint256 _newPrice) external onlyOwner {
+        price = _newPrice;
+        emit PriceChanged(price);
+    }
 
     /**
      * @notice Sets the address of the trusted PaletteManager contract.
@@ -85,7 +96,7 @@ contract Palettes is
         require(amount > 0, "Amount must be greater than 0");
         if (amount > MAX_MINTABLE) revert ExceedMaxMintable(MAX_MINTABLE);
         if (_tokenIdCounter + amount > MAX_SUPPLY) revert MaxSupplyReached();
-        if (msg.value != amount * PRICE) revert IncorrectPrice(amount * PRICE);
+        if (msg.value != amount * price) revert IncorrectPrice(amount * price);
 
         unchecked {
             for (uint8 i = 0; i < amount; i++) {
@@ -214,4 +225,3 @@ contract Palettes is
         return PaletteMetadata.tokenURI(tokenId, _palettes[tokenId]);
     }
 }
-
