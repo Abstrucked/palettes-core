@@ -65,40 +65,153 @@ library PaletteRenderer {
             );
     }
 
-    /**
-     * @notice Generates a base color palette using a seed value.
-     * @param _seed bytes32 The seed value for generating the base palette.
-     * @return uint192 The packed RGB values as a uint192.
-     */
+    // Add new helper for luminance calculation (scaled to avoid floats)
+    function getLuminanceScaled(
+        uint8 r,
+        uint8 g,
+        uint8 b
+    ) internal pure returns (uint256) {
+        // NTSC Luminance formula: (0.299*R + 0.587*G + 0.114*B) scaled by 1000 for integers
+        return (uint256(r) * 299 + uint256(g) * 587 + uint256(b) * 114) / 1000;
+    }
+
+    // Add a helper for a more "perceptual" complementary color
+    function getPerceptualComplement(
+        uint8 r,
+        uint8 g,
+        uint8 b
+    ) internal pure returns (uint24) {
+        // This is a simplified approach, often used in graphics shaders:
+        // It's not a full HSL complement, but aims for better visual contrast than 255-X.
+        // Basically, it means subtracting the color from a "neutral" white point.
+        // For a more accurate RGB complement that is still cheaper than HSL,
+        // you might shift the hue by 180 degrees using a simplified matrix approach if colors are primary/secondary.
+        // For now, let's keep it simple: inverted + slight saturation adjustment or just inverted.
+
+        // Using a "simplified" complementary calculation that's more effective than just 255-x.
+        // Example: For a color (r,g,b), its complement can be thought of as (255-r, 255-g, 255-b) but then
+        // re-normalized or slightly adjusted. A simple method is to find the min/max and use that.
+        // Or, for a primary, the complement is the mix of the other two.
+        // This can get complex quickly.
+        // Let's stick with the simplest and most performant perceptual:
+        // This is basically finding the "negative" of the light
+        // uint8 nr = 255 - r;
+        // uint8 ng = 255 - g;
+        // uint8 nb = 255 - b;
+        // return Colors.packRGB(nr, ng, nb);
+
+        // For a slightly "better" complement, we can derive hue like in HSL but only do rotation.
+        // This goes back to being close to HSL costs.
+
+        // Stick to your 255-r for now, it's the cheapest.
+        // If you want "better," the HSL module you shared IS the "better" and more expensive way.
+
+        // Let's offer a different kind of "related" color instead of aiming for "complement" directly
+        // that stays simple RGB math. How about a color with shifted primary dominance?
+        // E.g., if RED is dominant, decrease it and increase others.
+        // uint256 maxC = Utils.max(r, g, b);
+        // uint256 minC = Utils.min(r, g, b);
+        // uint256 sum = uint256(r) + uint256(g) + uint256(b);
+
+        // This is a simple RGB-based shift that "rotates" the primary
+        // Effectively moving a primary color to a secondary, or vice-versa
+        // e.g., (R,G,B) -> (G,B,R) -> (B,R,G) as distinct colors.
+        // Or, a "rotated inverse"
+        uint8 newR = 255 - b;
+        uint8 newG = 255 - r;
+        uint8 newB = 255 - g;
+        return Colors.packRGB(newR, newG, newB);
+    }
+
+    function _deriveOriginalColor(
+        bytes32 _seed
+    ) internal pure returns (uint24) {
+        return getBaseColor(_seed).value;
+    }
+
+    function _deriveLighterShade(
+        uint8 r,
+        uint8 g,
+        uint8 b
+    ) internal pure returns (uint24) {
+        uint8 r_light1 = uint8((uint256(r) * 80 + 255 * 20) / 100);
+        uint8 g_light1 = uint8((uint256(g) * 80 + 255 * 20) / 100);
+        uint8 b_light1 = uint8((uint256(b) * 80 + 255 * 20) / 100);
+        return Colors.packRGB(r_light1, g_light1, b_light1);
+    }
+
+    function _deriveDarkerShade(
+        uint8 r,
+        uint8 g,
+        uint8 b
+    ) internal pure returns (uint24) {
+        uint8 r_dark1 = uint8((uint256(r) * 80) / 100);
+        uint8 g_dark1 = uint8((uint256(g) * 80) / 100);
+        uint8 b_dark1 = uint8((uint256(b) * 80) / 100);
+        return Colors.packRGB(r_dark1, g_dark1, b_dark1);
+    }
+
+    function _deriveChannelSwapped(
+        uint8 r,
+        uint8 g,
+        uint8 b
+    ) internal pure returns (uint24) {
+        return Colors.packRGB(b, r, g);
+    }
+
+    function _deriveInverted(
+        uint8 r,
+        uint8 g,
+        uint8 b
+    ) internal pure returns (uint24) {
+        uint8 cr = 255 - r;
+        uint8 cg = 255 - g;
+        uint8 cb = 255 - b;
+        return Colors.packRGB(cr, cg, cb);
+    }
+
+    function _deriveDesaturated(
+        uint8 r,
+        uint8 g,
+        uint8 b,
+        uint256 luminance255
+    ) internal pure returns (uint24) {
+        uint8 r_desat = uint8((uint256(r) + luminance255) / 2);
+        uint8 g_desat = uint8((uint256(g) + luminance255) / 2);
+        uint8 b_desat = uint8((uint256(b) + luminance255) / 2);
+        return Colors.packRGB(r_desat, g_desat, b_desat);
+    }
+
+    // Ensure getPerceptualComplement function is also available and simplified if possible.
+    // Or, keep it as is, it's just one call within getBasePalette then.
+
+    // --- Original getBasePalette function (now simplified) ---
+
     function getBasePalette(bytes32 _seed) internal pure returns (uint192) {
-        // Unpacked color placeholders
         uint8 r;
         uint8 g;
         uint8 b;
 
-        // Get unpacked base color.
+        // Unpack base color
         (r, g, b) = Colors.unpackRGB(getBaseColor(_seed).value);
-        uint8 cr = 255 - r;
-        uint8 cg = 255 - g;
-        uint8 cb = 255 - b;
 
-        return
-            Colors.packPalette(
-                [
-                    getBaseColor(_seed).value,
-                    Colors.packRGB(b, r, g),
-                    Colors.packRGB(g, b, r),
-                    Colors.packRGB(cr, cg, cb),
-                    Colors.packRGB(cb, cr, cg),
-                    Colors.packRGB(cg, cb, cr),
-                    Colors.packRGB((r / 5), (g / 5), (b / 5)),
-                    Colors.packRGB(
-                        (255 - (cr / 3)),
-                        (255 - (cg / 3)),
-                        (255 - (cb / 3))
-                    )
-                ]
-            );
+        // Calculate luminance (only need `luminance255` for `_deriveDesaturated`)
+        uint256 baseLuminance = getLuminanceScaled(r, g, b);
+        uint256 luminance255 = (baseLuminance * 255) / 1000;
+
+        // 🛑 Final Fix: Populate the array by calling the new helper functions
+        uint24[8] memory colorsArray;
+
+        colorsArray[0] = _deriveOriginalColor(_seed);
+        colorsArray[1] = _deriveLighterShade(r, g, b);
+        colorsArray[2] = _deriveDarkerShade(r, g, b);
+        colorsArray[3] = getPerceptualComplement(r, g, b); // Assuming this is defined externally or within this library
+        colorsArray[4] = _deriveChannelSwapped(r, g, b);
+        colorsArray[5] = _deriveInverted(r, g, b);
+        colorsArray[6] = _deriveDesaturated(r, g, b, luminance255);
+        colorsArray[7] = _deriveDarkerShade(r, g, b); // Re-using for the 8th slot example
+
+        return Colors.packPalette(colorsArray);
     }
 
     /**

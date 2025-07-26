@@ -29,7 +29,9 @@ library Utils {
      * @param input The input string to hash.
      * @return bytes32 The pseudo-random bytes32 value.
      */
-    function randomBytes32(string memory input) internal pure returns (bytes32) {
+    function randomBytes32(
+        string memory input
+    ) internal pure returns (bytes32) {
         return bytes32(keccak256(abi.encodePacked(input)));
     }
 
@@ -47,7 +49,9 @@ library Utils {
         uint256 lower,
         uint256 upper
     ) internal pure returns (uint256) {
-        uint256 rand = random(string(abi.encodePacked(keyPrefix, Strings.toString(tokenId))));
+        uint256 rand = random(
+            string(abi.encodePacked(keyPrefix, Strings.toString(tokenId)))
+        );
         return (rand % (upper - lower)) + lower;
     }
 
@@ -57,13 +61,29 @@ library Utils {
      * @return bytes The hexadecimal representation of the decimal value.
      * @dev Inspired by Java code.
      */
-    function uintToHex(uint256 decimalValue) internal pure returns (bytes memory) {
+    function uintToHex(
+        uint256 decimalValue
+    ) internal pure returns (bytes memory) {
         uint remainder;
         bytes memory hexResult = "";
         string[16] memory hexDictionary = [
-                    "0", "1", "2", "3", "4", "5", "6", "7",
-                    "8", "9", "A", "B", "C", "D", "E", "F"
-            ];
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F"
+        ];
 
         while (decimalValue > 0) {
             remainder = decimalValue % 16;
@@ -86,7 +106,10 @@ library Utils {
         }
 
         // Ensure a minimum hex length of 6 for RGB values
-        return hexResult.length < 6 ? abi.encodePacked("000000", hexResult): hexResult;
+        return
+            hexResult.length < 6
+                ? abi.encodePacked("000000", hexResult)
+                : hexResult;
     }
 
     /**
@@ -94,7 +117,9 @@ library Utils {
      * @param _i The unsigned integer to convert.
      * @return _uintAsString string The string representation of the unsigned integer.
      */
-    function uint2str(uint256 _i) internal pure returns (string memory _uintAsString) {
+    function uint2str(
+        uint256 _i
+    ) internal pure returns (string memory _uintAsString) {
         if (_i == 0) {
             return "0";
         }
@@ -115,4 +140,17 @@ library Utils {
         }
         return string(bstr);
     }
+
+    function max(uint8 r, uint8 g, uint8 b) internal pure returns (uint8) {
+        uint8 _max = r > g ? r : g;
+
+        return _max > b ? _max : g;
+    }
+
+    function min(uint8 r, uint8 g, uint8 b) internal pure returns (uint8) {
+        uint8 _max = r < g ? r : g;
+
+        return _max < b ? _max : g;
+    }
 }
+
