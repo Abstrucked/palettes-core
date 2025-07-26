@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Utils} from "../libraries/Utils.sol";
 import {Colors} from "../libraries/Colors.sol";
-import {IPalettes} from "../contracts/interfaces/IPalettes.sol";
+import {IPalettes} from "./interfaces/IPalettes.sol";
 
 /**
  * @title PaletteRenderer
@@ -256,8 +256,7 @@ contract PaletteRenderer {
     function _svgColors(bytes32 seed) private pure returns (string memory) {
         uint192 palette = getBasePalette(seed);
 
-        uint256 padding = 50; // 🛑 Define your padding here (e.g., 50 units for SIZE=1024)
-        uint256 innerWidth = SIZE - (2 * padding); // Area available for palette after padding
+        uint256 padding = 50;
         uint256 innerHeight = SIZE - (2 * padding); // Assuming square overall drawing area
 
         // For a single horizontal row of 8 circles/rectangles:
@@ -268,8 +267,6 @@ contract PaletteRenderer {
 
         string memory renderSvg;
 
-        // --- Current implementation places circles ---
-        // If you're using circles as per previous examples
         unchecked {
             for (uint8 i = 0; i < 8; i++) {
                 // Calculate center Y for vertical centering within the padded area

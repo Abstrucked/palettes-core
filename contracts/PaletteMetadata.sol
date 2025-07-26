@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/Base64.sol";
 import {Utils} from "../libraries/Utils.sol";
 import {PaletteRenderer} from "./PaletteRenderer.sol";
-import {IPalettes} from "../contracts/interfaces/IPalettes.sol";
+import {IPalettes} from "./interfaces/IPalettes.sol";
 
 /// @title PaletteMetadata
 /// @dev Library for generating SVG and metadata for color palettes associated with tokens.
@@ -135,4 +135,3 @@ contract PaletteMetadata {
             );
     }
 }
-

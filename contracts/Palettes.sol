@@ -8,10 +8,10 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {Utils} from "../libraries/Utils.sol";
-import {PaletteMetadata} from "../libraries/PaletteMetadata.sol";
+import {PaletteMetadata} from "./PaletteMetadata.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IPaletteRenderer} from "./interfaces/IPaletteRenderer.sol";
-import {PaletteRenderer} from "../libraries/PaletteRenderer.sol";
+import {PaletteRenderer} from "./PaletteRenderer.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 import {IErrors} from "./interfaces/IErrors.sol";
