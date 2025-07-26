@@ -8,7 +8,13 @@ import {IPalettes} from "../contracts/interfaces/IPalettes.sol";
 
 /// @title PaletteMetadata
 /// @dev Library for generating SVG and metadata for color palettes associated with tokens.
-library PaletteMetadata {
+contract PaletteMetadata {
+    address paletteRenderer;
+
+    constructor(address _renderer) {
+        paletteRenderer = _renderer;
+    }
+
     /**
      * @dev Calculates and returns the metadata for a specific token.
      * @param tokenId The `tokenId` for this token.
@@ -19,7 +25,7 @@ library PaletteMetadata {
     function tokenURI(
         uint256 tokenId,
         bytes32 seed
-    ) internal pure returns (string memory) {
+    ) external view returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -35,7 +41,8 @@ library PaletteMetadata {
                             '"data:image/svg+xml;base64,',
                             Base64.encode(
                                 abi.encodePacked(
-                                    PaletteRenderer.drawPalette(seed)
+                                    PaletteRenderer(paletteRenderer)
+                                        .drawPalette(seed)
                                 )
                             ),
                             '",',
@@ -44,7 +51,8 @@ library PaletteMetadata {
                             Base64.encode(
                                 abi.encodePacked(
                                     generateHTML(
-                                        PaletteRenderer.drawPalette(seed)
+                                        PaletteRenderer(paletteRenderer)
+                                            .drawPalette(seed)
                                     )
                                 )
                             ),
@@ -65,17 +73,18 @@ library PaletteMetadata {
      * @return bytes The SVG snippet for the attributes.
      * @notice Code snippet based on Checks - ChecksMetadata.sol {author: Jalil.eth}
      */
-    function attributes(bytes32 seed) private pure returns (bytes memory) {
+    function attributes(bytes32 seed) private view returns (bytes memory) {
+        PaletteRenderer renderer = PaletteRenderer(paletteRenderer);
         return
             abi.encodePacked(
-                trait("Color 1", PaletteRenderer.webPalette(seed)[0], ","),
-                trait("Color 2", PaletteRenderer.webPalette(seed)[1], ","),
-                trait("Color 3", PaletteRenderer.webPalette(seed)[2], ","),
-                trait("Color 4", PaletteRenderer.webPalette(seed)[3], ","),
-                trait("Color 5", PaletteRenderer.webPalette(seed)[4], ","),
-                trait("Color 6", PaletteRenderer.webPalette(seed)[5], ","),
-                trait("Color 7", PaletteRenderer.webPalette(seed)[6], ","),
-                trait("Color 8", PaletteRenderer.webPalette(seed)[7], "")
+                trait("Color 1", renderer.webPalette(seed)[0], ","),
+                trait("Color 2", renderer.webPalette(seed)[1], ","),
+                trait("Color 3", renderer.webPalette(seed)[2], ","),
+                trait("Color 4", renderer.webPalette(seed)[3], ","),
+                trait("Color 5", renderer.webPalette(seed)[4], ","),
+                trait("Color 6", renderer.webPalette(seed)[5], ","),
+                trait("Color 7", renderer.webPalette(seed)[6], ","),
+                trait("Color 8", renderer.webPalette(seed)[7], "")
             );
     }
 

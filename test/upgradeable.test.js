@@ -25,8 +25,16 @@ describe("Palette contract", async () => {
     renderer = await Renderer.deploy();
     await renderer.waitForDeployment();
 
+    const Metadata = await ethers.getContractFactory("PaletteMetadata");
+    const metadata = await Metadata.deploy(await renderer.getAddress());
+    await metadata.waitForDeployment();
+
     const Palettes = await ethers.getContractFactory("Palettes");
-    palettes = await upgrades.deployProxy(Palettes, [owner.address]);
+    palettes = await upgrades.deployProxy(Palettes, [
+      owner.address,
+      await renderer.getAddress(),
+      await metadata.getAddress(),
+    ]);
     await palettes.waitForDeployment();
 
     const PaletteManager = await ethers.getContractFactory("PaletteManager");

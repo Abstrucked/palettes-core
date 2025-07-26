@@ -11,8 +11,10 @@ import {IPalettes} from "../contracts/interfaces/IPalettes.sol";
  * Contains functions for generating colors, palettes, and SVG representations of palettes.
  * Author: Abstrucked.eth
  */
-library PaletteRenderer {
+contract PaletteRenderer {
     uint256 private constant SIZE = 1024;
+
+    constructor() {}
 
     /**
      * @notice Generates a uint256 color value from a given seed.
@@ -75,54 +77,6 @@ library PaletteRenderer {
         return (uint256(r) * 299 + uint256(g) * 587 + uint256(b) * 114) / 1000;
     }
 
-    // Add a helper for a more "perceptual" complementary color
-    function getPerceptualComplement(
-        uint8 r,
-        uint8 g,
-        uint8 b
-    ) internal pure returns (uint24) {
-        // This is a simplified approach, often used in graphics shaders:
-        // It's not a full HSL complement, but aims for better visual contrast than 255-X.
-        // Basically, it means subtracting the color from a "neutral" white point.
-        // For a more accurate RGB complement that is still cheaper than HSL,
-        // you might shift the hue by 180 degrees using a simplified matrix approach if colors are primary/secondary.
-        // For now, let's keep it simple: inverted + slight saturation adjustment or just inverted.
-
-        // Using a "simplified" complementary calculation that's more effective than just 255-x.
-        // Example: For a color (r,g,b), its complement can be thought of as (255-r, 255-g, 255-b) but then
-        // re-normalized or slightly adjusted. A simple method is to find the min/max and use that.
-        // Or, for a primary, the complement is the mix of the other two.
-        // This can get complex quickly.
-        // Let's stick with the simplest and most performant perceptual:
-        // This is basically finding the "negative" of the light
-        // uint8 nr = 255 - r;
-        // uint8 ng = 255 - g;
-        // uint8 nb = 255 - b;
-        // return Colors.packRGB(nr, ng, nb);
-
-        // For a slightly "better" complement, we can derive hue like in HSL but only do rotation.
-        // This goes back to being close to HSL costs.
-
-        // Stick to your 255-r for now, it's the cheapest.
-        // If you want "better," the HSL module you shared IS the "better" and more expensive way.
-
-        // Let's offer a different kind of "related" color instead of aiming for "complement" directly
-        // that stays simple RGB math. How about a color with shifted primary dominance?
-        // E.g., if RED is dominant, decrease it and increase others.
-        // uint256 maxC = Utils.max(r, g, b);
-        // uint256 minC = Utils.min(r, g, b);
-        // uint256 sum = uint256(r) + uint256(g) + uint256(b);
-
-        // This is a simple RGB-based shift that "rotates" the primary
-        // Effectively moving a primary color to a secondary, or vice-versa
-        // e.g., (R,G,B) -> (G,B,R) -> (B,R,G) as distinct colors.
-        // Or, a "rotated inverse"
-        uint8 newR = 255 - b;
-        uint8 newG = 255 - r;
-        uint8 newB = 255 - g;
-        return Colors.packRGB(newR, newG, newB);
-    }
-
     function _deriveOriginalColor(
         bytes32 _seed
     ) internal pure returns (uint24) {
@@ -159,6 +113,17 @@ library PaletteRenderer {
         return Colors.packRGB(b, r, g);
     }
 
+    function _deriveGrayscale(
+        uint8 r,
+        uint8 g,
+        uint8 b
+    ) internal pure returns (uint24) {
+        uint256 luminance = getLuminanceScaled(r, g, b); // Get scaled luminance
+        uint8 grayValue = uint8((luminance * 255) / 1000); // Scale luminance to 0-255
+
+        return Colors.packRGB(grayValue, grayValue, grayValue);
+    }
+
     function _deriveInverted(
         uint8 r,
         uint8 g,
@@ -182,10 +147,19 @@ library PaletteRenderer {
         return Colors.packRGB(r_desat, g_desat, b_desat);
     }
 
-    // Ensure getPerceptualComplement function is also available and simplified if possible.
-    // Or, keep it as is, it's just one call within getBasePalette then.
-
-    // --- Original getBasePalette function (now simplified) ---
+    // In PaletteRenderer.sol, add this function somewhere with your other _derive helpers
+    function _deriveAnotherChannelSwappedInverted(
+        uint8 r,
+        uint8 g,
+        uint8 b
+    ) internal pure returns (uint24) {
+        // This is (255-G, 255-B, 255-R) or another permutation like (255-R, 255-B, 255-G)
+        // Let's use (255-G, 255-B, 255-R) for demonstration
+        uint8 invR = 255 - r;
+        uint8 invG = 255 - g;
+        uint8 invB = 255 - b;
+        return Colors.packRGB(invG, invB, invR);
+    }
 
     function getBasePalette(bytes32 _seed) internal pure returns (uint192) {
         uint8 r;
@@ -199,17 +173,16 @@ library PaletteRenderer {
         uint256 baseLuminance = getLuminanceScaled(r, g, b);
         uint256 luminance255 = (baseLuminance * 255) / 1000;
 
-        // 🛑 Final Fix: Populate the array by calling the new helper functions
         uint24[8] memory colorsArray;
 
         colorsArray[0] = _deriveOriginalColor(_seed);
         colorsArray[1] = _deriveLighterShade(r, g, b);
         colorsArray[2] = _deriveDarkerShade(r, g, b);
-        colorsArray[3] = getPerceptualComplement(r, g, b); // Assuming this is defined externally or within this library
-        colorsArray[4] = _deriveChannelSwapped(r, g, b);
-        colorsArray[5] = _deriveInverted(r, g, b);
-        colorsArray[6] = _deriveDesaturated(r, g, b, luminance255);
-        colorsArray[7] = _deriveDarkerShade(r, g, b); // Re-using for the 8th slot example
+        colorsArray[4] = Colors.getPerceptualComplement(r, g, b); // Assuming this is defined externally or within this library
+        colorsArray[5] = _deriveChannelSwapped(r, g, b);
+        colorsArray[7] = _deriveGrayscale(r, g, b);
+        colorsArray[3] = _deriveDesaturated(r, g, b, luminance255);
+        colorsArray[6] = _deriveAnotherChannelSwappedInverted(r, g, b); // Re-using for the 8th slot example
 
         return Colors.packPalette(colorsArray);
     }
@@ -242,7 +215,7 @@ library PaletteRenderer {
      */
     function rgbPalette(
         bytes32 _seed
-    ) internal pure returns (uint24[8] memory) {
+    ) external pure returns (uint24[8] memory) {
         uint192 palette = getBasePalette(_seed);
         return [
             uint24(palette >> 168),
@@ -261,7 +234,7 @@ library PaletteRenderer {
      * @param seed bytes32 The seed value for generating the palette.
      * @return string[8] An array of 8 hexadecimal color codes.
      */
-    function webPalette(bytes32 seed) internal pure returns (string[8] memory) {
+    function webPalette(bytes32 seed) external pure returns (string[8] memory) {
         uint192 _rgbPalette = getBasePalette(seed);
         return [
             getHex(Colors.unpackPaletteAt(_rgbPalette, 0)),
@@ -282,18 +255,42 @@ library PaletteRenderer {
      */
     function _svgColors(bytes32 seed) private pure returns (string memory) {
         uint192 palette = getBasePalette(seed);
-        uint256 HEIGHT = SIZE / 8;
+
+        uint256 padding = 50; // 🛑 Define your padding here (e.g., 50 units for SIZE=1024)
+        uint256 innerWidth = SIZE - (2 * padding); // Area available for palette after padding
+        uint256 innerHeight = SIZE - (2 * padding); // Assuming square overall drawing area
+
+        // For a single horizontal row of 8 circles/rectangles:
+        // The height of each palette "bar" or the diameter of each circle.
+        // Let's assume the circles/rectangles fill the *padded* height, and are laid out horizontally.
+        uint256 elementSize = innerHeight / 8; // If you want them stacked vertically
+        // Or, if single horizontal row, this is the height/diameter of each element.
+
         string memory renderSvg;
+
+        // --- Current implementation places circles ---
+        // If you're using circles as per previous examples
         unchecked {
             for (uint8 i = 0; i < 8; i++) {
+                // Calculate center Y for vertical centering within the padded area
+                // (Padding + half of innerHeight for perfect vertical centering of a single strip)
+                uint256 centerY = padding + (innerHeight / 2);
+
+                // Calculate center X for horizontal distribution within the padded area
+                // (Padding + start of first element + (element index * element width) + half element width)
+                uint256 centerX = padding +
+                    (i * elementSize) +
+                    (elementSize / 2);
+                uint256 radius = (elementSize / 2) - 1; // Radius, with a small inner margin
+
                 renderSvg = string.concat(
                     renderSvg,
                     '<circle cy="',
-                    Utils.uint2str(HEIGHT),
+                    Utils.uint2str(centerY),
                     '" cx="',
-                    Utils.uint2str((i * HEIGHT) + (HEIGHT / 2)),
+                    Utils.uint2str(centerX),
                     '" r="',
-                    Utils.uint2str((HEIGHT / 2) - 1),
+                    Utils.uint2str(radius),
                     '" fill="',
                     getHex(Colors.unpackPaletteAt(palette, i)),
                     '"></circle>'
@@ -308,18 +305,23 @@ library PaletteRenderer {
      * @param _seed bytes32 The seed value for generating the palette.
      * @return string The complete SVG string.
      */
-    function drawPalette(bytes32 _seed) internal pure returns (string memory) {
+    function drawPalette(bytes32 _seed) external pure returns (string memory) {
         return
             string.concat(
                 '<svg width="',
                 Utils.uint2str(SIZE),
                 '" height="',
-                Utils.uint2str(SIZE / 4),
+                Utils.uint2str(SIZE),
                 '" viewBox="0 0 ',
                 Utils.uint2str(SIZE),
                 " ",
-                Utils.uint2str(SIZE / 4),
+                Utils.uint2str(SIZE),
                 '" xmlns="http://www.w3.org/2000/svg">',
+                '<rect x="0" y="0" width="',
+                Utils.uint2str(SIZE),
+                '" height="',
+                Utils.uint2str(SIZE),
+                '" fill="#FFFFFF"></rect>',
                 _svgColors(_seed),
                 "</svg>"
             );

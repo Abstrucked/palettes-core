@@ -31,12 +31,18 @@ contract Palettes is
     UUPSUpgradeable
 {
     event PriceChanged(uint256);
+    event ManagerUpdated(address newManager);
+    event RendererUpdated(address newRenderer);
+    event MetadataUpdated(address newMetadata);
 
     uint256 private _tokenIdCounter;
     uint256 public MAX_SUPPLY;
     uint256 public MAX_MINTABLE;
     uint256 public price;
     address public managerContractAddress;
+    address public paletteRendererAddress;
+    address public paletteMetadataAddress;
+
     mapping(uint256 => bytes32) private _palettes;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -48,10 +54,17 @@ contract Palettes is
      * @notice Initializes the contract with the given owner, MAX_SUPPLY, MAX_MINTABLE, and price.
      * @param initialOwner address The address of the initial owner.
      */
-    function initialize(address initialOwner) public initializer {
+    function initialize(
+        address initialOwner,
+        address _paletteRendererAddress,
+        address _paletteMetadataAddress
+    ) public initializer {
         __ERC721_init("Palettes", "PAL");
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
+
+        paletteRendererAddress = _paletteRendererAddress;
+        paletteMetadataAddress = _paletteMetadataAddress;
 
         MAX_SUPPLY = 10000;
         MAX_MINTABLE = 20;
@@ -84,7 +97,37 @@ contract Palettes is
     function setManagerContractAddress(address _newManager) external onlyOwner {
         require(_newManager != address(0), "Manager address cannot be zero");
         managerContractAddress = _newManager;
-        // Consider emitting an event: event ManagerUpdated(address newManager);
+        // Consider emitting an event:
+        emit ManagerUpdated(_newManager);
+    }
+
+    /**
+     * @notice Sets the address of the Metadata contract.
+     * @dev Only the contract owner can call this.
+     * @param _newMetadata address The address of the Metadata contract.
+     */
+    function setMetadataContractAddress(
+        address _newMetadata
+    ) external onlyOwner {
+        require(_newMetadata != address(0), "Manager address cannot be zero");
+        managerContractAddress = _newMetadata;
+        // Consider emitting an event:
+        emit MetadataUpdated(_newMetadata);
+    }
+
+    /**
+     * @notice Sets the address of the Renderer contract.
+     * @dev Only the contract owner can call this.
+     * @param _newRenderer address The address of the Renderer contract.
+     *
+     */
+    function setRendererContractAddress(
+        address _newRenderer
+    ) external onlyOwner {
+        require(_newRenderer != address(0), "Manager address cannot be zero");
+        managerContractAddress = _newRenderer;
+        // Consider emitting an event:
+        emit MetadataUpdated(_newRenderer);
     }
 
     /**
@@ -154,7 +197,10 @@ contract Palettes is
             "Palettes: Access denied. Only Manager can call."
         );
 
-        return PaletteRenderer.rgbPalette(_palettes[_tokenId]);
+        return
+            PaletteRenderer(paletteRendererAddress).rgbPalette(
+                _palettes[_tokenId]
+            );
     }
 
     /**
@@ -170,7 +216,10 @@ contract Palettes is
             "Palettes: Access denied. Only Manager can call."
         );
 
-        return PaletteRenderer.webPalette(_palettes[_tokenId]);
+        return
+            PaletteRenderer(paletteRendererAddress).webPalette(
+                _palettes[_tokenId]
+            );
     }
 
     /**
@@ -208,7 +257,10 @@ contract Palettes is
         require(_tokenId <= _tokenIdCounter, "TokenId does not exist");
         require(ownerOf(_tokenId) == msg.sender, "Not the owner of the token");
 
-        return PaletteRenderer.drawPalette(_palettes[_tokenId]);
+        return
+            PaletteRenderer(paletteRendererAddress).drawPalette(
+                _palettes[_tokenId]
+            );
     }
 
     /**
@@ -222,6 +274,10 @@ contract Palettes is
     ) public view override(ERC721Upgradeable) returns (string memory) {
         require(tokenId <= _tokenIdCounter, "TokenId does not exist");
 
-        return PaletteMetadata.tokenURI(tokenId, _palettes[tokenId]);
+        return
+            PaletteMetadata(paletteMetadataAddress).tokenURI(
+                tokenId,
+                _palettes[tokenId]
+            );
     }
 }

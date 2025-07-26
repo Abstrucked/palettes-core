@@ -150,7 +150,7 @@ library Utils {
     function min(uint8 r, uint8 g, uint8 b) internal pure returns (uint8) {
         uint8 _max = r < g ? r : g;
 
-        return _max < b ? _max : g;
+        return _max < b ? _max : b;
     }
 }
 
