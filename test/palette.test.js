@@ -1,5 +1,5 @@
 // Testing Palettes.sol contract:
-const { ethers, upgrades } = require("hardhat");
+const { ethers, upgrades, network } = require("hardhat");
 const { expect } = require("chai");
 const fs = require("node:fs");
 describe("Palette contract", async () => {
@@ -142,10 +142,10 @@ describe("Palette contract", async () => {
           ],
         },
         domain: {
-          name: "PaletteStorage",
+          name: "PaletteManager",
           version: "1",
           chainId: BigInt(31337).toString(),
-          verifyingContract: await storage.getAddress(),
+          verifyingContract: await manager.getAddress(),
         },
         message: {
           paletteId: 1n,
@@ -224,10 +224,10 @@ describe("Palette contract", async () => {
           ],
         },
         domain: {
-          name: "PaletteStorage",
+          name: "PaletteManager",
           version: "1",
           chainId: BigInt(31337).toString(),
-          verifyingContract: await storage.getAddress(),
+          verifyingContract: await manager.getAddress(),
         },
         message: {
           paletteId: 1n,

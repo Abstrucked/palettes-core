@@ -74,7 +74,7 @@ describe("Palette contract", async () => {
     it("Should mint and set the palette #1", async function () {
       const tokenId = 1;
 
-      await palettes.mint(2n, [], { value: ethers.parseEther("0.01") });
+      await palettes.mint(2n, [], { value: ethers.parseEther("0.02") });
       await testERC721Upgradeable.mint();
       const typedData = {
         types: {
@@ -98,10 +98,10 @@ describe("Palette contract", async () => {
           ],
         },
         domain: {
-          name: "PaletteStorage",
+          name: "PaletteManager",
           version: "1",
           chainId: BigInt(31337).toString(),
-          verifyingContract: await storage.getAddress(),
+          verifyingContract: await manager.getAddress(),
         },
         message: {
           paletteId: 1n,

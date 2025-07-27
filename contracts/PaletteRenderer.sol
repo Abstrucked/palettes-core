@@ -31,7 +31,7 @@ contract PaletteRenderer {
      * @return uint8 The red component as a uint8.
      */
     function getRed(uint256 value) internal pure returns (uint8) {
-        return uint8((value >> 8) & 0xff);
+        return uint8((value >> 16) & 0xff);
     }
 
     /**
@@ -40,7 +40,7 @@ contract PaletteRenderer {
      * @return uint8 The green component as a uint8.
      */
     function getGreen(uint256 value) internal pure returns (uint8) {
-        return uint8((value >> 4) & 0xff);
+        return uint8((value >> 8) & 0xff);
     }
 
     /**
