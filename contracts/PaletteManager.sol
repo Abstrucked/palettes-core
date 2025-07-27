@@ -5,6 +5,8 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 
 import {IManager} from "./interfaces/IManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
@@ -22,7 +24,8 @@ contract PaletteManager is
     ERC165,
     IManager,
     UUPSUpgradeable,
-    OwnableUpgradeable
+    OwnableUpgradeable,
+    EIP712Upgradeable
 {
     event StorageContractUpdated(address newAddress);
 
@@ -48,6 +51,8 @@ contract PaletteManager is
     ) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
+        __EIP712_init("PaletteManager", "1");
+
         _palettes = palettesContract;
     }
 
@@ -90,12 +95,31 @@ contract PaletteManager is
         bytes calldata signature
     ) external {
         require(_storage != address(0), "Storage contract not set.");
+
+        address signer = ECDSA.recover(
+            _hashTypedDataV4(
+                keccak256(
+                    abi.encode(
+                        keccak256(
+                            "PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"
+                        ),
+                        paletteId,
+                        _contractAddress,
+                        _tokenId
+                    )
+                )
+            ),
+            signature
+        );
+        require(
+            isPaletteOwner(paletteId, signer),
+            "Not the owner of the token"
+        );
         // Call Storage contract to set the palette record
         IStorage(_storage).setPaletteRecord(
             paletteId,
             _contractAddress,
-            _tokenId,
-            signature
+            _tokenId
         );
     }
 
