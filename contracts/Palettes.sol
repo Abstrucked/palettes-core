@@ -15,6 +15,7 @@ import {PaletteRenderer} from "./PaletteRenderer.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import {IUsePalette} from "./interfaces/IUsePalette.sol";
 import {IErrors} from "./interfaces/IErrors.sol";
+import {MerkleTree} from "./MerkleTree.sol";
 
 /**
  * @title Palettes
@@ -28,7 +29,8 @@ contract Palettes is
     IPalettes,
     ERC721Upgradeable,
     OwnableUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    MerkleTree
 {
     event PriceChanged(uint256);
     event ManagerUpdated(address newManager);
@@ -97,7 +99,7 @@ contract Palettes is
     function setManagerContractAddress(address _newManager) external onlyOwner {
         require(_newManager != address(0), "Manager address cannot be zero");
         managerContractAddress = _newManager;
-        // Consider emitting an event:
+
         emit ManagerUpdated(_newManager);
     }
 
@@ -130,17 +132,7 @@ contract Palettes is
         emit MetadataUpdated(_newRenderer);
     }
 
-    /**
-     * @notice Mints a specific amount of tokens.
-     * @param amount uint256 The amount of tokens to mint.
-     * @return bool True if the minting was successful.
-     */
-    function mint(uint256 amount) external payable returns (bool) {
-        require(amount > 0, "Amount must be greater than 0");
-        if (amount > MAX_MINTABLE) revert ExceedMaxMintable(MAX_MINTABLE);
-        if (_tokenIdCounter + amount > MAX_SUPPLY) revert MaxSupplyReached();
-        if (msg.value != amount * price) revert IncorrectPrice(amount * price);
-
+    function _mint(uint256 amount) private {
         unchecked {
             for (uint8 i = 0; i < amount; i++) {
                 _tokenIdCounter++;
@@ -148,6 +140,27 @@ contract Palettes is
                 _palettes[_tokenIdCounter] = _generateSeed(_tokenIdCounter);
             }
         }
+    }
+
+    /**
+     * @notice Mints a specific amount of tokens.
+     * @param amount uint256 The amount of tokens to mint.
+     * @return bool True if the minting was successful.
+     */
+    function mint(
+        uint256 amount,
+        bytes32[] calldata proof
+    ) external payable returns (bool) {
+        require(amount > 0, "Amount must be greater than 0");
+        if (amount > MAX_MINTABLE) revert ExceedMaxMintable(MAX_MINTABLE);
+        if (_tokenIdCounter + amount > MAX_SUPPLY) revert MaxSupplyReached();
+
+        // Apply discount logic
+        if (!hasDiscount(proof) && msg.value != price)
+            revert IncorrectPrice(msg.value);
+
+        _mint(amount);
+
         return true;
     }
 

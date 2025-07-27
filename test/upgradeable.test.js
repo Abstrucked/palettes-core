@@ -1,5 +1,5 @@
 // Testing Palettes.sol contract:
-const { ethers, upgrades } = require("hardhat");
+const { ethers, upgrades, network } = require("hardhat");
 const { expect } = require("chai");
 const fs = require("node:fs");
 describe("Palette contract", async () => {
@@ -54,7 +54,6 @@ describe("Palette contract", async () => {
     await manager.setStorageContract(await storage.getAddress());
 
     await palettes.setPrice(ethers.parseEther("0.01"));
-    await palettes.mint(2n, { value: ethers.parseEther("0.02") });
 
     const TestERC721Upgradeable = await ethers.getContractFactory(
       "TestERC721Upgradeable"
@@ -75,6 +74,7 @@ describe("Palette contract", async () => {
     it("Should mint and set the palette #1", async function () {
       const tokenId = 1;
 
+      await palettes.mint(2n, [], { value: ethers.parseEther("0.01") });
       await testERC721Upgradeable.mint();
       const typedData = {
         types: {

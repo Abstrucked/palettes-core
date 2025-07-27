@@ -35,6 +35,14 @@ module.exports = {
         "0xe4e1aEF9c352a6A56e39f502612cA88a3441CFA5",
       ],
     },
+    baseSepolia: {
+      url: process.env.BASE_SEPOLIA,
+      accounts: [process.env.BASE_SEPOLIA_DEPLOYER],
+    },
+    base: {
+      url: process.env.BASE,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+    },
   },
 };
 

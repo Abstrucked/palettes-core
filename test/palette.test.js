@@ -75,11 +75,11 @@ describe("Palette contract", async () => {
     it("Should mint a token with token ID 1 & 2 to account1", async function () {
       const tx1 = await palettes
         .connect(account1)
-        .mint(1n, { value: ethers.parseEther("0.01") });
+        .mint(1n, [], { value: ethers.parseEther("0.01") });
       tx1.wait();
       const tx2 = await palettes
         .connect(account1)
-        .mint(1n, { value: ethers.parseEther("0.01") });
+        .mint(1n, [], { value: ethers.parseEther("0.01") });
       tx2.wait();
 
       console.log(await palettes.tokenURI(1n));
@@ -100,7 +100,7 @@ describe("Palette contract", async () => {
             </head><body><div class="box">`;
       const maxMint = 10;
       for (let i = 0; i < maxMint; i++) {
-        const tx1 = await palettes.mint(1n, {
+        const tx1 = await palettes.mint(1n, [], {
           value: ethers.parseEther("0.01"),
         });
         tx1.wait();
@@ -118,7 +118,7 @@ describe("Palette contract", async () => {
       const nft = await NFT.deploy(await manager.getAddress());
       await nft.waitForDeployment();
 
-      await palettes.mint(1n, { value: ethers.parseEther("0.01") });
+      await palettes.mint(1n, [], { value: ethers.parseEther("0.01") });
       const nft_address = await nft.getAddress();
       const typedData = {
         types: {
@@ -200,7 +200,7 @@ describe("Palette contract", async () => {
       await testErc721.mint();
       await testErc721.mint();
 
-      await palettes.mint(1n, { value: ethers.parseEther("0.01") });
+      await palettes.mint(1n, [], { value: ethers.parseEther("0.01") });
 
       const typedData = {
         types: {
