@@ -1,5 +1,5 @@
 {
-  "name": "@palettes/core",
+  "name": "palettes-core",
   "version": "1.0.1",
   "description": "Core contracts for the Palettes Protocol",
   "main": "index.js",
