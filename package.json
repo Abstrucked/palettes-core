@@ -1,15 +1,23 @@
 {
-  "name": "palettes-erc721",
+  "name": "@palettes/core",
   "version": "1.0.1",
-  "description": "Fully onchain autogenerative 8 color palettes",
+  "description": "Core contracts for the Palettes Protocol",
   "main": "index.js",
+  "files": [
+    "contracts/**/*.sol",
+    "artifacts/**/*.json",
+    "typechain-types/**/*.ts",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
-    "compile": "npx hardhat compile",
-    "test": "npx hardhat test"
+    "compile": "hardhat compile",
+    "typechain": "hardhat typechain",
+    "prepack": "pnpm compile && pnpm typechain"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Abstrucked/palettes-erc721.git"
+    "url": "git+https://github.com/Abstrucked/palettes-core.git"
   },
   "keywords": [
     "ERC721",
