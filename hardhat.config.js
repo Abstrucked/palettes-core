@@ -7,6 +7,17 @@ require("@openzeppelin/hardhat-upgrades");
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: "0.8.20",
+  paths: {
+    sources: "./contracts",
+    artifacts: "./artifacts",
+    cache: "./cache",
+    tests: "./test",
+  },
+  typechain: {
+    outDir: "typechain-types",
+    target: "ethers-v6", // Explicitly set for common Hardhat 2.20 setups
+    alwaysGenerateOverloads: true,
+  },
   settings: {
     optimizer: {
       enabled: true,
@@ -75,4 +86,3 @@ if (process.env.ETHERSCAN_APIKEY) {
     apiKey: process.env.ETHERSCAN_APIKEY,
   };
 }
-
