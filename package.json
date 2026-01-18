@@ -1,6 +1,6 @@
 {
   "name": "palettes-core",
-  "version": "1.0.2",
+  "version": "1.0.21",
   "description": "Core contracts for the Palettes Protocol",
   "main": "index.js",
   "files": [

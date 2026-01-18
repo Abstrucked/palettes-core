@@ -74,7 +74,7 @@ describe("Palette contract", async () => {
     it("Should mint and set the palette #1", async function () {
       const tokenId = 1;
 
-      await palettes.mint(2n, [], { value: ethers.parseEther("0.01") });
+      await palettes.mint(2n, [], { value: ethers.parseEther("0.02") });
       await testERC721Upgradeable.mint();
       const typedData = {
         types: {
@@ -98,10 +98,10 @@ describe("Palette contract", async () => {
           ],
         },
         domain: {
-          name: "PaletteStorage",
+          name: "PaletteManager",
           version: "1",
           chainId: BigInt(31337).toString(),
-          verifyingContract: await storage.getAddress(),
+          verifyingContract: await manager.getAddress(),
         },
         message: {
           paletteId: 1n,
@@ -110,31 +110,31 @@ describe("Palette contract", async () => {
         },
       };
 
-      console.log(
-        "::::::: OWNERS :::::",
-        await owner.getAddress(),
-        await palettes.ownerOf(1n),
-        await manager.isPaletteOwner(1n, await owner.getAddress())
-      );
-      console.log({
-        palettesAddress: await palettes.getAddress(),
-        storageAddress: await storage.getAddress(),
-        paletteManagerAddress: await manager.getAddress(),
-        nftAddress: await testERC721Upgradeable.getAddress(),
-      });
+      // console.log(
+      //   "::::::: OWNERS :::::",
+      //   await owner.getAddress(),
+      //   await palettes.ownerOf(1n),
+      //   await manager.isPaletteOwner(1n, await owner.getAddress())
+      // );
+      // console.log({
+      //   palettesAddress: await palettes.getAddress(),
+      //   storageAddress: await storage.getAddress(),
+      //   paletteManagerAddress: await manager.getAddress(),
+      //   nftAddress: await testERC721Upgradeable.getAddress(),
+      // });
       const signature = await owner.signTypedData(
         typedData.domain,
         typedData.primaryType,
         typedData.message
       );
 
-      console.log(signature);
+      // console.log(signature);
       expect(await testERC721Upgradeable.setPalette(1n, 1n, signature))
         .to.emit(testERC721Upgradeable, "PaletteSet")
         .withArgs(1n, 1n);
-      console.log(await testERC721Upgradeable.getRGBPalette(1n));
+      // console.log(await testERC721Upgradeable.getRGBPalette(1n));
       const webPalette = await testERC721Upgradeable.getPalette(1n);
-      console.log(webPalette);
+      // console.log(webPalette);
       // Function to unpack uint24 to RGB value
       function uint24ToRgb(uint24) {
         const red = (uint24 >> 16) & 0xff;
@@ -148,14 +148,14 @@ describe("Palette contract", async () => {
       let rgbValues = rgbPalette1.map((col) =>
         uint24ToRgb(Number(col.toString()))
       );
-      console.log(rgbValues); // { red: R_VALUE, green: G_VALUE, blue: B_VALUE }
+      // console.log(rgbValues); // { red: R_VALUE, green: G_VALUE, blue: B_VALUE }
       const hexString = rgbPalette1[0].toString(16);
 
       // Convert the hexadecimal string to a number
       const decimalNumber = parseInt(hexString, 16);
 
-      console.log(decimalNumber);
-      console.log(uint24ToRgb(decimalNumber));
+      // console.log(decimalNumber);
+      // console.log(uint24ToRgb(decimalNumber));
 
       const hexColor = webPalette[0];
 
@@ -164,7 +164,7 @@ describe("Palette contract", async () => {
       const g = parseInt(hexColor.slice(3, 5), 16);
       const b = parseInt(hexColor.slice(5, 7), 16);
 
-      console.log(`HEX: ${webPalette[0]}, RGB: (${r}, ${g}, ${b})`);
+      // console.log(`HEX: ${webPalette[0]}, RGB: (${r}, ${g}, ${b})`);
       // Additional expectation/unittest (if necessary)
       //   expect(rgbValue).to.deep.equal({ red: EXPECTED_R, green: EXPECTED_G, blue: EXPECTED_B });
       //       expect(await testERC721Upgradeable.getPalette(tokenId)).to.equal(1n);
@@ -190,9 +190,9 @@ describe("Palette contract", async () => {
 
       const rgbNumbers = rgbPalette1.map(hexToRgb);
 
-      console.log(rgbNumbers.join("\n"));
-
-      console.log(await palettes.svg(1n));
+      // console.log(rgbNumbers.join("\n"));
+      //
+      // console.log(await palettes.svg(1n));
       //
     });
   });

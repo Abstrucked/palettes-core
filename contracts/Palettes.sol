@@ -112,7 +112,7 @@ contract Palettes is
         address _newMetadata
     ) external onlyOwner {
         require(_newMetadata != address(0), "Manager address cannot be zero");
-        managerContractAddress = _newMetadata;
+        paletteMetadataAddress = _newMetadata;
         // Consider emitting an event:
         emit MetadataUpdated(_newMetadata);
     }
@@ -127,9 +127,9 @@ contract Palettes is
         address _newRenderer
     ) external onlyOwner {
         require(_newRenderer != address(0), "Manager address cannot be zero");
-        managerContractAddress = _newRenderer;
+        paletteRendererAddress = _newRenderer;
         // Consider emitting an event:
-        emit MetadataUpdated(_newRenderer);
+        emit RendererUpdated(_newRenderer);
     }
 
     function _mint(uint256 amount) private {
@@ -156,9 +156,10 @@ contract Palettes is
         if (_tokenIdCounter + amount > MAX_SUPPLY) revert MaxSupplyReached();
 
         // Apply discount logic
-        if (!hasDiscount(proof) && msg.value != price)
-            revert IncorrectPrice(msg.value);
-
+        if (!hasDiscount(proof)) {
+            uint256 requiredPayment = price * amount;
+            if (requiredPayment != msg.value) revert IncorrectPrice(msg.value);
+        }
         _mint(amount);
 
         return true;

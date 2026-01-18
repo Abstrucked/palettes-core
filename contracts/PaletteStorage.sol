@@ -19,12 +19,7 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
  * Inherits from IStorage, UUPSUpgradeable, OwnableUpgradeable, and EIP712Upgradeable.
  * Author: Abstrucked.eth
  */
-contract PaletteStorage is
-    IStorage,
-    UUPSUpgradeable,
-    OwnableUpgradeable,
-    EIP712Upgradeable
-{
+contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable {
     address public managerContractAddress;
 
     /// @dev Mapping from hash to palette ID
@@ -45,7 +40,6 @@ contract PaletteStorage is
     ) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        __EIP712_init("PaletteStorage", "1");
         managerContractAddress = _managerContractAddress;
     }
 
@@ -79,36 +73,16 @@ contract PaletteStorage is
      * @param paletteId uint256 The palette ID.
      * @param _contractAddress address The contract address associated with the palette.
      * @param _tokenId uint256 The token ID associated with the palette.
-     * @param signature bytes The signature to authorize the palette setting.
      */
     function setPaletteRecord(
         uint256 paletteId,
         address _contractAddress,
-        uint256 _tokenId,
-        bytes calldata signature
+        uint256 _tokenId
     ) external {
         require(
             msg.sender == managerContractAddress,
             "PaletteStorage: Access denied. Only the trusted Manager can call."
         );
-        address signer = ECDSA.recover(
-            _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        keccak256(
-                            "PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"
-                        ),
-                        paletteId,
-                        _contractAddress,
-                        _tokenId
-                    )
-                )
-            ),
-            signature
-        );
-        if (!IManager(msg.sender).isPaletteOwner(paletteId, signer)) {
-            revert("Not the owner of the token");
-        }
         _setPaletteRecord(paletteId, _contractAddress, _tokenId);
     }
 

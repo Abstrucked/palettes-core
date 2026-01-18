@@ -75,16 +75,18 @@ contract PaletteMetadata {
      */
     function attributes(bytes32 seed) private view returns (bytes memory) {
         PaletteRenderer renderer = PaletteRenderer(paletteRenderer);
+        string[8] memory palette = renderer.webPalette(seed);
+
         return
             abi.encodePacked(
-                trait("Color 1", renderer.webPalette(seed)[0], ","),
-                trait("Color 2", renderer.webPalette(seed)[1], ","),
-                trait("Color 3", renderer.webPalette(seed)[2], ","),
-                trait("Color 4", renderer.webPalette(seed)[3], ","),
-                trait("Color 5", renderer.webPalette(seed)[4], ","),
-                trait("Color 6", renderer.webPalette(seed)[5], ","),
-                trait("Color 7", renderer.webPalette(seed)[6], ","),
-                trait("Color 8", renderer.webPalette(seed)[7], "")
+                trait("Color 1", palette[0], ","),
+                trait("Color 2", palette[1], ","),
+                trait("Color 3", palette[2], ","),
+                trait("Color 4", palette[3], ","),
+                trait("Color 5", palette[4], ","),
+                trait("Color 6", palette[5], ","),
+                trait("Color 7", palette[6], ","),
+                trait("Color 8", palette[7], "")
             );
     }
 
@@ -128,9 +130,9 @@ contract PaletteMetadata {
         return
             string(
                 abi.encodePacked(
-                    "<html><body style='margin: 0; padding: 0;'><svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'>",
+                    "<html><body style='margin: 0; padding: 0;'>",
                     svg,
-                    "</svg></body></html>"
+                    "</body></html>"
                 )
             );
     }

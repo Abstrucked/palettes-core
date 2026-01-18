@@ -1,5 +1,5 @@
 // Testing Palettes.sol contract:
-const { ethers, upgrades } = require("hardhat");
+const { ethers, upgrades, network } = require("hardhat");
 const { expect } = require("chai");
 const fs = require("node:fs");
 describe("Palette contract", async () => {
@@ -82,7 +82,7 @@ describe("Palette contract", async () => {
         .mint(1n, [], { value: ethers.parseEther("0.01") });
       tx2.wait();
 
-      console.log(await palettes.tokenURI(1n));
+      // console.log(await palettes.tokenURI(1n));
       expect(await palettes.balanceOf(account1.address)).to.equal(2n);
     });
 
@@ -106,7 +106,7 @@ describe("Palette contract", async () => {
         tx1.wait();
         fs.writeFileSync(`palette${i + 1}.svg`, await palettes.svg(i + 1));
         html += await palettes.svg(i + 1);
-        console.log(await palettes.svg(i + 1));
+        // console.log(await palettes.svg(i + 1));
       }
 
       html += `</div></body></html>`;
@@ -142,10 +142,10 @@ describe("Palette contract", async () => {
           ],
         },
         domain: {
-          name: "PaletteStorage",
+          name: "PaletteManager",
           version: "1",
           chainId: BigInt(31337).toString(),
-          verifyingContract: await storage.getAddress(),
+          verifyingContract: await manager.getAddress(),
         },
         message: {
           paletteId: 1n,
@@ -154,36 +154,36 @@ describe("Palette contract", async () => {
         },
       };
 
-      console.log(
-        "::::::: OWNERS :::::",
-        await owner.getAddress(),
-        await palettes.ownerOf(1n),
-        await manager.isPaletteOwner(1n, await owner.getAddress())
-      );
-      console.log({
-        palettesAddress: await palettes.getAddress(),
-        storageAddress: await storage.getAddress(),
-        paletteManagerAddress: await manager.getAddress(),
-        nftAddress: nft_address,
-      });
+      // console.log(
+      //   "::::::: OWNERS :::::",
+      //   await owner.getAddress(),
+      //   await palettes.ownerOf(1n),
+      //   await manager.isPaletteOwner(1n, await owner.getAddress())
+      // );
+      // console.log({
+      //   palettesAddress: await palettes.getAddress(),
+      //   storageAddress: await storage.getAddress(),
+      //   paletteManagerAddress: await manager.getAddress(),
+      //   nftAddress: nft_address,
+      // });
       const signature = await owner.signTypedData(
         typedData.domain,
         typedData.primaryType,
         typedData.message
       );
 
-      console.log(signature);
+      // console.log(signature);
       expect(await nft.setPalette(1n, 1n, signature))
         .to.emit(nft, "PaletteSet")
         .withArgs(1n, 1n);
 
       // console.log("#".repeat(100), "\n", await nft.getRGBPalette(1n));
-      console.log({
-        palettesAddress: await palettes.getAddress(),
-        storageAddress: await storage.getAddress(),
-        paletteManagerAddress: await manager.getAddress(),
-        nftAddress: nft_address,
-      });
+      // console.log({
+      //   palettesAddress: await palettes.getAddress(),
+      //   storageAddress: await storage.getAddress(),
+      //   paletteManagerAddress: await manager.getAddress(),
+      //   nftAddress: nft_address,
+      // });
       //
     });
 
@@ -224,10 +224,10 @@ describe("Palette contract", async () => {
           ],
         },
         domain: {
-          name: "PaletteStorage",
+          name: "PaletteManager",
           version: "1",
           chainId: BigInt(31337).toString(),
-          verifyingContract: await storage.getAddress(),
+          verifyingContract: await manager.getAddress(),
         },
         message: {
           paletteId: 1n,
@@ -241,7 +241,7 @@ describe("Palette contract", async () => {
         typedData.message
       );
 
-      console.log(signature);
+      // console.log(signature);
       expect(await testErc721.setPalette(1n, 1n, signature))
         .to.emit(testErc721, "PaletteSet")
         .withArgs(1n, 1n);
