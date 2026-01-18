@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
-import {Utils} from "../libraries/Utils.sol";
-import {Colors} from "../libraries/Colors.sol";
+import {Utils} from "./libraries/Utils.sol";
+import {Colors} from "./libraries/Colors.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 
 /**
