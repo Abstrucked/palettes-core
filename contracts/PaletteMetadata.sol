@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/Base64.sol";
-import {Utils} from "../libraries/Utils.sol";
+import {Utils} from "./libraries/Utils.sol";
 import {PaletteRenderer} from "./PaletteRenderer.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 
