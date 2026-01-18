@@ -29,49 +29,49 @@ The protocol consists of five main contracts:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Palettes Ecosystem                      │
+│                      Palettes Ecosystem                     │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────┐      ┌─────────────────┐                 │
-│  │   Palettes   │◄─────│ PaletteRenderer │                 │
-│  │   (ERC721)   │      │  (SVG/Colors)   │                 │
-│  └──────┬───────┘      └─────────────────┘                 │
+│                                                             │
+│  ┌──────────────┐      ┌─────────────────┐                  │
+│  │   Palettes   │◄─────│ PaletteRenderer │                  │
+│  │   (ERC721)   │      │  (SVG/Colors)   │                  │
+│  └──────┬───────┘      └─────────────────┘                  │
 │         │              ┌─────────────────┐                  │
-│         └─────────────►│PaletteMetadata  │                 │
+│         └─────────────►│PaletteMetadata  │                  │
 │         │              │  (JSON/Base64)  │                  │
 │         │              └─────────────────┘                  │
-│         │                                                    │
-│  ┌──────▼──────────┐   ┌─────────────────┐                 │
-│  │ PaletteManager  │◄──│ PaletteStorage  │                 │
-│  │ (Access Control)│   │  (EIP-712 Sig)  │                 │
-│  └─────────┬───────┘   └─────────────────┘                 │
-│            │                                                 │
-│            │                                                 │
-│  ┌─────────▼──────────────────────────────┐                │
-│  │      External NFT Collections          │                │
-│  │   (inherit UsePalette contract)        │                │
-│  └────────────────────────────────────────┘                │
-│                                                              │
+│         │                                                   │
+│  ┌──────▼──────────┐   ┌─────────────────┐                  │
+│  │ PaletteManager  │◄──│ PaletteStorage  │                  │
+│  │ (Access Control)│   │  (EIP-712 Sig)  │                  │
+│  └─────────┬───────┘   └─────────────────┘                  │
+│            │                                                │
+│            │                                                │
+│  ┌─────────▼──────────────────────────────┐                 │
+│  │      External NFT Collections          │                 │
+│  │   (inherit UsePalette contract)        │                 │
+│  └────────────────────────────────────────┘                 │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Core Contracts
 
-| Contract | Type | Purpose |
-|----------|------|---------|
-| **Palettes.sol** | Upgradeable ERC721 | Main NFT contract managing palette tokens |
-| **PaletteRenderer.sol** | Pure | Generates colors, palettes, and SVG from seeds |
-| **PaletteMetadata.sol** | View | Constructs JSON metadata with embedded images |
-| **PaletteManager.sol** | Upgradeable | Manages cross-contract palette access control |
-| **PaletteStorage.sol** | Upgradeable | Stores palette-to-NFT associations via EIP-712 |
+| Contract                | Type               | Purpose                                        |
+| ----------------------- | ------------------ | ---------------------------------------------- |
+| **Palettes.sol**        | Upgradeable ERC721 | Main NFT contract managing palette tokens      |
+| **PaletteRenderer.sol** | Pure               | Generates colors, palettes, and SVG from seeds |
+| **PaletteMetadata.sol** | View               | Constructs JSON metadata with embedded images  |
+| **PaletteManager.sol**  | Upgradeable        | Manages cross-contract palette access control  |
+| **PaletteStorage.sol**  | Upgradeable        | Stores palette-to-NFT associations via EIP-712 |
 
 ### Integration Contracts
 
-| Contract | Purpose |
-|----------|---------|
-| **UsePalette.sol** | Base contract for standard ERC721 collections |
+| Contract                      | Purpose                                          |
+| ----------------------------- | ------------------------------------------------ |
+| **UsePalette.sol**            | Base contract for standard ERC721 collections    |
 | **UsePaletteUpgradeable.sol** | Base contract for upgradeable ERC721 collections |
-| **MerkleTree.sol** | Abstract whitelist/discount verification base |
+| **MerkleTree.sol**            | Abstract whitelist/discount verification base    |
 
 ## Installation
 
@@ -193,28 +193,28 @@ string memory svg = string(abi.encodePacked(
 Users must sign a message to authorize their palette for use with your NFT:
 
 ```javascript
-const ethers = require('ethers');
+const ethers = require("ethers");
 
 // EIP-712 domain
 const domain = {
-    name: "PaletteStorage",
-    version: "1",
-    chainId: await ethers.provider.getNetwork().then(n => n.chainId),
-    verifyingContract: PALETTE_STORAGE_ADDRESS
+  name: "PaletteStorage",
+  version: "1",
+  chainId: await ethers.provider.getNetwork().then((n) => n.chainId),
+  verifyingContract: PALETTE_STORAGE_ADDRESS,
 };
 
 // Type definition
 const types = {
-    PaletteRecord: [
-        { name: "contractAddress", type: "address" },
-        { name: "tokenId", type: "uint256" }
-    ]
+  PaletteRecord: [
+    { name: "contractAddress", type: "address" },
+    { name: "tokenId", type: "uint256" },
+  ],
 };
 
 // Message to sign
 const message = {
-    contractAddress: YOUR_NFT_CONTRACT_ADDRESS,
-    tokenId: YOUR_NFT_TOKEN_ID
+  contractAddress: YOUR_NFT_CONTRACT_ADDRESS,
+  tokenId: YOUR_NFT_TOKEN_ID,
 };
 
 // User signs
@@ -253,6 +253,7 @@ function tokenURI(uint256 tokenId) external view returns (string memory)
 ```
 
 **Constants:**
+
 - Max Supply: 10,000
 - Max Mint Per Transaction: 20
 - Mint Price: 0.005 ETH (configurable)
@@ -265,18 +266,19 @@ Pure contract for color generation and SVG rendering.
 
 From a single seed, 8 colors are generated:
 
-| Index | Type | Algorithm |
-|-------|------|-----------|
-| 0 | Original | Base color from seed |
-| 1 | Light | 80% original + 20% white |
-| 2 | Dark | 80% brightness |
-| 3 | Muted | Desaturated toward luminance |
-| 4 | Complement | Perceptual inverse with channel swap |
-| 5 | Shifted | RGB → BGR channel rotation |
-| 6 | Inverted Shift | Complex inversion (255-G, 255-B, 255-R) |
-| 7 | Grayscale | NTSC luminance (0.299R + 0.587G + 0.114B) |
+| Index | Type           | Algorithm                                 |
+| ----- | -------------- | ----------------------------------------- |
+| 0     | Original       | Base color from seed                      |
+| 1     | Light          | 80% original + 20% white                  |
+| 2     | Dark           | 80% brightness                            |
+| 3     | Muted          | Desaturated toward luminance              |
+| 4     | Complement     | Perceptual inverse with channel swap      |
+| 5     | Shifted        | RGB → BGR channel rotation                |
+| 6     | Inverted Shift | Complex inversion (255-G, 255-B, 255-R)   |
+| 7     | Grayscale      | NTSC luminance (0.299R + 0.587G + 0.114B) |
 
 **SVG Output:**
+
 - Dimensions: 1024×1024px
 - Layout: 8 circles horizontally distributed
 - Format: Base64-encoded data URI
@@ -308,6 +310,7 @@ function setPaletteRecord(
 Secure storage for palette associations using EIP-712 signature verification.
 
 **Security:**
+
 - Uses typed data hashing (EIP-712)
 - Domain separator includes chain ID, contract address
 - Prevents cross-chain and cross-contract signature reuse
@@ -316,13 +319,13 @@ Secure storage for palette associations using EIP-712 signature verification.
 
 The protocol supports multiple color data formats:
 
-| Type | Description | Usage |
-|------|-------------|-------|
-| `uint24` | Single RGB color (8 bits per channel) | Individual color storage |
-| `uint24[8]` | Array of 8 colors | Function returns |
-| `uint192` | Packed 8 colors (24×8 bits) | Gas-efficient storage |
-| `string` | Hex format (#RRGGBB) | Web/SVG rendering |
-| `string[8]` | Array of hex strings | External integration |
+| Type        | Description                           | Usage                    |
+| ----------- | ------------------------------------- | ------------------------ |
+| `uint24`    | Single RGB color (8 bits per channel) | Individual color storage |
+| `uint24[8]` | Array of 8 colors                     | Function returns         |
+| `uint192`   | Packed 8 colors (24×8 bits)           | Gas-efficient storage    |
+| `string`    | Hex format (#RRGGBB)                  | Web/SVG rendering        |
+| `string[8]` | Array of hex strings                  | External integration     |
 
 ### Color Library (Colors.sol)
 
@@ -419,6 +422,7 @@ npx hardhat coverage
 The test suite includes:
 
 - **palette.test.js**: Core functionality tests
+
   - Minting
   - SVG generation
   - Color retrieval
@@ -461,13 +465,13 @@ npx hardhat run scripts/deploy.js --network base
 
 Approximate gas costs on Base mainnet:
 
-| Operation | Gas Cost |
-|-----------|----------|
-| Mint 1 palette | ~150,000 |
-| Mint 20 palettes | ~1,800,000 |
-| Set palette (with signature) | ~80,000 |
-| Get palette (view) | 0 (view function) |
-| Generate SVG (view) | 0 (view function) |
+| Operation                    | Gas Cost          |
+| ---------------------------- | ----------------- |
+| Mint 1 palette               | ~150,000          |
+| Mint 20 palettes             | ~1,800,000        |
+| Set palette (with signature) | ~80,000           |
+| Get palette (view)           | 0 (view function) |
+| Generate SVG (view)          | 0 (view function) |
 
 ### Compiler Settings
 
@@ -486,12 +490,12 @@ Approximate gas costs on Base mainnet:
 
 ## Supported Networks
 
-| Network | Chain ID | Status |
-|---------|----------|--------|
-| Base | 8453 | Mainnet |
-| Base Sepolia | 84532 | Testnet |
-| Ethereum | 1 | Configurable |
-| Arbitrum | 42161 | Configurable |
+| Network      | Chain ID | Status       |
+| ------------ | -------- | ------------ |
+| Base         | 8453     | Mainnet      |
+| Base Sepolia | 84532    | Testnet      |
+| Ethereum     | 1        | Configurable |
+| Arbitrum     | 42161    | Configurable |
 
 ## Security
 
@@ -543,6 +547,7 @@ Contributions are welcome. Please:
 ## Acknowledgments
 
 Built with:
+
 - Solidity ^0.8.20
 - OpenZeppelin Contracts v5
 - Hardhat
