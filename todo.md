@@ -1,3 +1,0 @@
-# TODO: Palettes protocol
-
--
