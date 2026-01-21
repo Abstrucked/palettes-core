@@ -36,6 +36,11 @@ contract TestERC721Upgradeable is
         _mint(msg.sender, _tokenIdCounter);
     }
 
+    function testIsPaletteSet(uint256 tokenId) external view returns (bool) {
+        bool result = isPaletteSet(tokenId);
+        return result;
+    }
+
     function supportsInterface(
         bytes4 interfaceId
     )

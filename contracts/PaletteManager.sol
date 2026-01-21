@@ -7,7 +7,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
-
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import {IPalettes} from "./interfaces/IPalettes.sol";
 import {IStorage} from "./interfaces/IStorage.sol";
@@ -132,8 +132,13 @@ contract PaletteManager is
         uint256 tokenId
     ) external view returns (string[8] memory) {
         require(
-            ERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
-            "PaletteManager: Caller does not implement IUsePalette interface"
+            ERC165Checker.supportsInterface(
+                msg.sender,
+                type(IUsePalette).interfaceId
+            ),
+            "Caller does not implement IUsePalette"
+            //     ERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
+            //     "PaletteManager: Caller does not implement IUsePalette interface"
         );
         uint256 paletteId = getPaletteId(tokenId, msg.sender);
         require(paletteId > 0, "Palette not found");
@@ -150,8 +155,11 @@ contract PaletteManager is
         uint256 tokenId
     ) external view returns (uint24[8] memory) {
         require(
-            ERC165(msg.sender).supportsInterface(type(IUsePalette).interfaceId),
-            "PaletteManager: Caller does not implement IUsePalette interface"
+            ERC165Checker.supportsInterface(
+                msg.sender,
+                type(IUsePalette).interfaceId
+            ),
+            "Caller does not implement IUsePalette"
         );
 
         uint256 paletteId = getPaletteId(tokenId, msg.sender);

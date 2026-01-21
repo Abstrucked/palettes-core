@@ -197,10 +197,10 @@ const ethers = require("ethers");
 
 // EIP-712 domain
 const domain = {
-  name: "PaletteStorage",
+  name: "PaletteManager",
   version: "1",
   chainId: await ethers.provider.getNetwork().then((n) => n.chainId),
-  verifyingContract: PALETTE_STORAGE_ADDRESS,
+  verifyingContract: PALETTE_MANAGER_ADDRESS,
 };
 
 // Type definition

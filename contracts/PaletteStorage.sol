@@ -98,9 +98,9 @@ contract PaletteStorage is IStorage, UUPSUpgradeable, OwnableUpgradeable {
     ) external view returns (uint256) {
         /// check for gas efficiency here declare/re-call function.
         uint256 paletteId = _getPaletteId(tokenId, contractAddress);
-        if (paletteId == 0) {
-            revert("Palette not found");
-        }
+        // if (paletteId == 0) {
+        //     revert("Palette not found");
+        // }
         return paletteId;
     }
 

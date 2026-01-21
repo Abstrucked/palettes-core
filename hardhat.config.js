@@ -6,7 +6,7 @@ require("@openzeppelin/hardhat-upgrades");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.20",
+  solidity: "0.8.24",
   paths: {
     sources: "./contracts",
     artifacts: "./artifacts",
@@ -74,10 +74,8 @@ if (process.env.ARBITRUM) {
 if (process.env.SEPOLIA) {
   module.exports.networks.sepolia = {
     url: process.env.SEPOLIA,
-    ledgerAccounts: ["0x307E2701D27032E0663a704B3396163331DD6F72"],
-    // accounts: [
-    //   process.env.PRIVATE_KEY
-    // ]
+    // ledgerAccounts: ["0x307E2701D27032E0663a704B3396163331DD6F72"],
+    accounts: [process.env.DEPLOYER_PRIVATE_KEY],
   };
 }
 

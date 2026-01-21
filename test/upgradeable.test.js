@@ -127,7 +127,8 @@ describe("Palette contract", async () => {
         typedData.primaryType,
         typedData.message
       );
-
+      const isSet = await testERC721Upgradeable.isPaletteSet(1n);
+      console.log({ isSet });
       // console.log(signature);
       expect(await testERC721Upgradeable.setPalette(1n, 1n, signature))
         .to.emit(testERC721Upgradeable, "PaletteSet")
