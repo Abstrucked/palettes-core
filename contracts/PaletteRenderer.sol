@@ -22,7 +22,7 @@ contract PaletteRenderer {
      * @return uint256 The generated uint256 color value.
      */
     function generateUintColor(bytes32 seed) private pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(seed))) % 524288;
+        return uint256(keccak256(abi.encodePacked(seed))) % 16777216;
     }
 
     /**

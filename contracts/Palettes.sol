@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {Utils} from "./libraries/Utils.sol";
@@ -29,6 +30,7 @@ contract Palettes is
     IPalettes,
     ERC721Upgradeable,
     OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
     UUPSUpgradeable,
     MerkleTree
 {
@@ -63,6 +65,7 @@ contract Palettes is
     ) public initializer {
         __ERC721_init("Palettes", "PAL");
         __Ownable_init(initialOwner);
+        __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
 
         paletteRendererAddress = _paletteRendererAddress;
@@ -70,7 +73,7 @@ contract Palettes is
 
         MAX_SUPPLY = 10000;
         MAX_MINTABLE = 20;
-        price = 0.005 ether;
+        price = 0.001 ether;
     }
 
     /**
@@ -293,5 +296,15 @@ contract Palettes is
                 tokenId,
                 _palettes[tokenId]
             );
+    }
+
+    /**
+     * @dev Withdraws the contract's balance to the owner's address
+     *      and distributes 10% of the balance to each gold owner.
+     */
+    function withdraw() external onlyOwner nonReentrant {
+        require(address(this).balance > 0, "No balance to withdraw");
+        payable(owner()).transfer(address(this).balance);
+        emit Withdrawn(owner(), address(this).balance);
     }
 }

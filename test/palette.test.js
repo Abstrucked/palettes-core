@@ -246,5 +246,90 @@ describe("Palette contract", async () => {
         .to.emit(testErc721, "PaletteSet")
         .withArgs(1n, 1n);
     });
+
+    it("Should maintain palette assignment when NFT is transferred to another account", async function () {
+      // Mint a palette as owner
+      await palettes
+        .connect(owner)
+        .mint(1n, [], { value: ethers.parseEther("0.01") });
+
+      // Deploy test NFT contract
+      const TestERC721 = await ethers.getContractFactory(
+        "TestERC721Upgradeable"
+      );
+      const testErc721 = await upgrades.deployProxy(TestERC721, [
+        owner.address,
+        await manager.getAddress(),
+      ]);
+      await testErc721.waitForDeployment();
+
+      // Mint NFT to owner
+      await testErc721.mint();
+
+      // Prepare typedData for setting palette
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "version", type: "string" },
+            { name: "chainId", type: "uint256" },
+            { name: "verifyingContract", type: "address" },
+            { name: "salt", type: "bytes32" },
+          ],
+          PaletteRecord: [
+            { name: "paletteId", type: "uint256" },
+            { name: "tokenId", type: "uint256" },
+          ],
+        },
+        primaryType: {
+          PaletteRecord: [
+            { name: "paletteId", type: "uint256" },
+            { name: "contractAddress", type: "address" },
+            { name: "tokenId", type: "uint256" },
+          ],
+        },
+        domain: {
+          name: "PaletteManager",
+          version: "1",
+          chainId: BigInt(31337).toString(),
+          verifyingContract: await manager.getAddress(),
+        },
+        message: {
+          paletteId: 1n,
+          contractAddress: await testErc721.getAddress(),
+          tokenId: 1n,
+        },
+      };
+
+      // Sign with owner since they own the palette
+      const signature = await owner.signTypedData(
+        typedData.domain,
+        typedData.primaryType,
+        typedData.message
+      );
+
+      // Set palette for the NFT
+      await testErc721.setPalette(1n, 1n, signature);
+
+      // Verify palette is set before transfer
+      expect(await testErc721.isPaletteSet(1n)).to.be.true;
+      const paletteBefore = await testErc721.getPalette(1n);
+      expect(paletteBefore).to.have.lengthOf(8);
+
+      // Transfer NFT from owner to account1
+      await testErc721
+        .connect(owner)
+        .transferFrom(owner.address, account1.address, 1n);
+
+      // Verify new owner
+      expect(await testErc721.ownerOf(1n)).to.equal(account1.address);
+
+      // Check that palette is still set after transfer
+      expect(await testErc721.isPaletteSet(1n)).to.be.true;
+      const paletteAfter = await testErc721.getPalette(1n);
+      expect(paletteAfter).to.have.lengthOf(8);
+      // Verify the palette colors are the same
+      expect(paletteAfter).to.deep.equal(paletteBefore);
+    });
   });
 });

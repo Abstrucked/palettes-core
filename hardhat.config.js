@@ -49,10 +49,18 @@ module.exports = {
     baseSepolia: {
       url: process.env.BASE_SEPOLIA,
       accounts: [process.env.BASE_SEPOLIA_DEPLOYER],
+      ledgerAccounts: [
+        "0x307E2701D27032E0663a704B3396163331DD6F72",
+        "0xe4e1aEF9c352a6A56e39f502612cA88a3441CFA5",
+      ],
     },
     base: {
       url: process.env.BASE,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      accounts: [process.env.BASE_SEPOLIA_DEPLOYER],
+      ledgerAccounts: [
+        "0x307E2701D27032E0663a704B3396163331DD6F72",
+        "0xe4e1aEF9c352a6A56e39f502612cA88a3441CFA5",
+      ],
     },
   },
 };

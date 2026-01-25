@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 interface IPalettes {
     // Events
+    event Withdrawn(address indexed to, uint256 amount);
 
     /// Color struct definition
     struct RGBColor {

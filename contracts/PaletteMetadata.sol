@@ -33,7 +33,7 @@ contract PaletteMetadata {
                     Base64.encode(
                         abi.encodePacked(
                             "{",
-                            '"name": "Palettes ',
+                            '"name": "Palettes #',
                             Utils.uint2str(tokenId),
                             '",',
                             '"description": "8 Color Palette.",',
