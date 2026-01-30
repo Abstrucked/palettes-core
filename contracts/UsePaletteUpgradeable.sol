@@ -64,14 +64,29 @@ abstract contract UsePaletteUpgradeable is
     }
 
     /**
+     * @notice Get the current nonce for an address from the PaletteManager.
+     * @dev Helper function to simplify frontend integration - no need to call PaletteManager directly.
+     * @param account address The address to check.
+     * @return uint256 The current nonce for the account.
+     */
+    function getNonce(address account) external view returns (uint256) {
+        UsePaletteStorage storage s = _getUsePaletteStorage();
+        return IManager(s._paletteManager).getNonce(account);
+    }
+
+    /**
      * @notice Set a palette for a given token ID.
      * @param tokenId uint256 The ID of the token.
      * @param paletteId uint256 The ID of the palette.
+     * @param nonce uint256 The nonce for replay protection.
+     * @param deadline uint256 Optional deadline timestamp (0 for no deadline).
      * @param signature bytes The signature to authorize the palette setting.
      */
     function setPalette(
         uint256 tokenId,
         uint256 paletteId,
+        uint256 nonce,
+        uint256 deadline,
         bytes calldata signature
     ) public {
         UsePaletteStorage storage s = _getUsePaletteStorage();
@@ -79,6 +94,8 @@ abstract contract UsePaletteUpgradeable is
             paletteId,
             address(this),
             tokenId,
+            nonce,
+            deadline,
             signature
         );
     }

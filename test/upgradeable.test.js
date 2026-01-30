@@ -77,6 +77,7 @@ describe("Palette contract", async () => {
 
       await palettes.mint(2n, [], { value: ethers.parseEther("0.02") });
       await testERC721Upgradeable.mint();
+      const nonce = await manager.getNonce(owner.address);
       const typedData = {
         types: {
           EIP712Domain: [
@@ -96,6 +97,8 @@ describe("Palette contract", async () => {
             { name: "paletteId", type: "uint256" },
             { name: "contractAddress", type: "address" },
             { name: "tokenId", type: "uint256" },
+            { name: "nonce", type: "uint256" },
+            { name: "deadline", type: "uint256" },
           ],
         },
         domain: {
@@ -108,6 +111,8 @@ describe("Palette contract", async () => {
           paletteId: 2n,
           contractAddress: await testERC721Upgradeable.getAddress(),
           tokenId: 1n,
+          nonce: nonce,
+          deadline: 0n,
         },
       };
 
@@ -131,7 +136,7 @@ describe("Palette contract", async () => {
       const isSet = await testERC721Upgradeable.isPaletteSet(1n);
       console.log({ isSet });
       // console.log(signature);
-      expect(await testERC721Upgradeable.setPalette(1n, 2n, signature))
+      expect(await testERC721Upgradeable.setPalette(1n, 2n, nonce, 0n, signature))
         .to.emit(testERC721Upgradeable, "PaletteSet")
         .withArgs(1n, 2n);
       // console.log(await testERC721Upgradeable.getRGBPalette(1n));

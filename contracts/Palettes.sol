@@ -304,10 +304,21 @@ contract Palettes is
             );
     }
 
+    /**
+     * @notice Withdraws the contract balance to the owner.
+     * @dev Uses call instead of transfer for better compatibility with contract owners.
+     *      Emits the actual withdrawn amount before transfer.
+     */
     function withdraw() external onlyOwner nonReentrant {
-        require(address(this).balance > 0, "No balance to withdraw");
-        payable(owner()).transfer(address(this).balance);
-        emit Withdrawn(owner(), address(this).balance);
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No balance to withdraw");
+
+        // CRITICAL FIX: Emit event BEFORE transfer with correct amount
+        emit Withdrawn(owner(), balance);
+
+        // IMPROVEMENT: Use call instead of transfer for better gas handling
+        (bool success, ) = payable(owner()).call{value: balance}("");
+        require(success, "Transfer failed");
     }
 
     function maxSupply() public view returns (uint256) {

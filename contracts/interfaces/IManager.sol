@@ -6,8 +6,12 @@ interface IManager {
         uint256 paletteId,
         address _contractAddress,
         uint256 _tokenId,
+        uint256 nonce,
+        uint256 deadline,
         bytes calldata signature
     ) external;
+
+    function getNonce(address account) external view returns (uint256);
 
     function getPalette(
         uint256 tokenId

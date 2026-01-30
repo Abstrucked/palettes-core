@@ -122,6 +122,7 @@ describe("Palette contract", async () => {
 
       await palettes.mint(1n, [], { value: ethers.parseEther("0.01") });
       const nft_address = await nft.getAddress();
+      const nonce = await manager.getNonce(owner.address);
       const typedData = {
         types: {
           EIP712Domain: [
@@ -141,6 +142,8 @@ describe("Palette contract", async () => {
             { name: "paletteId", type: "uint256" },
             { name: "contractAddress", type: "address" },
             { name: "tokenId", type: "uint256" },
+            { name: "nonce", type: "uint256" },
+            { name: "deadline", type: "uint256" },
           ],
         },
         domain: {
@@ -153,6 +156,8 @@ describe("Palette contract", async () => {
           paletteId: 2n,
           contractAddress: await nft.getAddress(),
           tokenId: 1n,
+          nonce: nonce,
+          deadline: 0n,
         },
       };
 
@@ -175,7 +180,7 @@ describe("Palette contract", async () => {
       );
 
       // console.log(signature);
-      expect(await nft.setPalette(1n, 2n, signature))
+      expect(await nft.setPalette(1n, 2n, nonce, 0n, signature))
         .to.emit(nft, "PaletteSet")
         .withArgs(1n, 2n);
 
@@ -204,6 +209,7 @@ describe("Palette contract", async () => {
 
       await palettes.mint(1n, [], { value: ethers.parseEther("0.01") });
 
+      const nonce = await manager.getNonce(owner.address);
       const typedData = {
         types: {
           EIP712Domain: [
@@ -223,6 +229,8 @@ describe("Palette contract", async () => {
             { name: "paletteId", type: "uint256" },
             { name: "contractAddress", type: "address" },
             { name: "tokenId", type: "uint256" },
+            { name: "nonce", type: "uint256" },
+            { name: "deadline", type: "uint256" },
           ],
         },
         domain: {
@@ -235,6 +243,8 @@ describe("Palette contract", async () => {
           paletteId: 2n,
           contractAddress: await testErc721.getAddress(),
           tokenId: 1n,
+          nonce: nonce,
+          deadline: 0n,
         },
       };
       const signature = await owner.signTypedData(
@@ -244,7 +254,7 @@ describe("Palette contract", async () => {
       );
 
       // console.log(signature);
-      expect(await testErc721.setPalette(1n, 2n, signature))
+      expect(await testErc721.setPalette(1n, 2n, nonce, 0n, signature))
         .to.emit(testErc721, "PaletteSet")
         .withArgs(1n, 2n);
     });
@@ -269,6 +279,7 @@ describe("Palette contract", async () => {
       await testErc721.mint();
 
       // Prepare typedData for setting palette
+      const nonce = await manager.getNonce(owner.address);
       const typedData = {
         types: {
           EIP712Domain: [
@@ -288,6 +299,8 @@ describe("Palette contract", async () => {
             { name: "paletteId", type: "uint256" },
             { name: "contractAddress", type: "address" },
             { name: "tokenId", type: "uint256" },
+            { name: "nonce", type: "uint256" },
+            { name: "deadline", type: "uint256" },
           ],
         },
         domain: {
@@ -300,6 +313,8 @@ describe("Palette contract", async () => {
           paletteId: 2n,
           contractAddress: await testErc721.getAddress(),
           tokenId: 1n,
+          nonce: nonce,
+          deadline: 0n,
         },
       };
 
@@ -311,7 +326,7 @@ describe("Palette contract", async () => {
       );
 
       // Set palette for the NFT
-      await testErc721.setPalette(1n, 2n, signature);
+      await testErc721.setPalette(1n, 2n, nonce, 0n, signature);
 
       // Verify palette is set before transfer
       expect(await testErc721.isPaletteSet(1n)).to.be.true;

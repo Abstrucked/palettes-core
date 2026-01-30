@@ -4,9 +4,13 @@ pragma solidity ^0.8.20;
 interface IUsePalette {
     event PaletteSet(uint256 indexed tokenId, uint256 indexed paletteId);
 
+    function getNonce(address account) external view returns (uint256);
+
     function setPalette(
         uint256 tokenId,
         uint256 paletteId,
+        uint256 nonce,
+        uint256 deadline,
         bytes calldata signature
     ) external;
 

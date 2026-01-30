@@ -28,12 +28,21 @@ contract PaletteManager is
     EIP712Upgradeable
 {
     event StorageContractUpdated(address newAddress);
+    event NonceUsed(address indexed signer, uint256 nonce);
+    event PaletteSetFor(
+        address indexed nftContract,
+        uint256 nftTokenId,
+        uint256 paletteId
+    );
 
     /// @dev Address of the palettes contract
     address private _palettes;
 
     /// @dev Address of the storage contract
     address private _storage;
+
+    /// @dev Nonce mapping to prevent signature replay attacks
+    mapping(address => uint256) public nonces;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -82,35 +91,51 @@ contract PaletteManager is
     }
 
     /**
-     * @notice Sets a palette record in the storage contract.
+     * @notice Sets a palette record in the storage contract with replay protection.
      * @param paletteId uint256 The palette ID.
      * @param _contractAddress address The contract address associated with the palette.
      * @param _tokenId uint256 The token ID associated with the palette.
+     * @param nonce uint256 The nonce for replay protection (must equal current nonce for signer).
+     * @param deadline uint256 Optional deadline timestamp (0 for no deadline).
      * @param signature bytes The signature to authorize the palette setting.
      */
     function setPaletteRecord(
         uint256 paletteId,
         address _contractAddress,
         uint256 _tokenId,
+        uint256 nonce,
+        uint256 deadline,
         bytes calldata signature
     ) external {
         require(_storage != address(0), "Storage contract not set.");
+
+        // Check deadline if specified (0 means no deadline)
+        if (deadline != 0) {
+            require(block.timestamp <= deadline, "Signature expired");
+        }
 
         address signer = ECDSA.recover(
             _hashTypedDataV4(
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId)"
+                            "PaletteRecord(uint256 paletteId,address contractAddress,uint256 tokenId,uint256 nonce,uint256 deadline)"
                         ),
                         paletteId,
                         _contractAddress,
-                        _tokenId
+                        _tokenId,
+                        nonce,
+                        deadline
                     )
                 )
             ),
             signature
         );
+
+        require(nonce == nonces[signer], "Invalid nonce");
+        nonces[signer]++;
+        emit NonceUsed(signer, nonce);
+
         require(
             isPaletteOwner(paletteId, signer),
             "Not the owner of the token"
@@ -121,6 +146,17 @@ contract PaletteManager is
             _contractAddress,
             _tokenId
         );
+
+        emit PaletteSetFor(_contractAddress, _tokenId, paletteId);
+    }
+
+    /**
+     * @notice Get the current nonce for an address.
+     * @param account address The address to check.
+     * @return uint256 The current nonce.
+     */
+    function getNonce(address account) external view returns (uint256) {
+        return nonces[account];
     }
 
     /**

@@ -9,7 +9,7 @@ const { ethers, upgrades, network } = require("hardhat");
 async function main() {
   const proxyAddress = {
     baseSepolia: "0x2609FA31f65DD255Bd0990dE033CF8b7BDADe119",
-    sepolia: "0xFe37026b75Ddd0cDe203895AeB6500007915d96F",
+    sepolia: "0x6775cc5Cf1B27A25A09CB217F8C329801c0f365C",
   };
 
   if (!proxyAddress[network.name])
