@@ -54,6 +54,7 @@ describe("Palette contract", async () => {
     await manager.setStorageContract(await storage.getAddress());
 
     await palettes.setPrice(ethers.parseEther("0.01"));
+    await palettes.startMintingPhase();
 
     const TestERC721Upgradeable = await ethers.getContractFactory(
       "TestERC721Upgradeable"
@@ -71,7 +72,7 @@ describe("Palette contract", async () => {
       expect(await testERC721Upgradeable.symbol()).to.equal("TESTUPGRADE");
     });
 
-    it("Should mint and set the palette #1", async function () {
+    it("Should mint and set the palette #2", async function () {
       const tokenId = 1;
 
       await palettes.mint(2n, [], { value: ethers.parseEther("0.02") });
@@ -104,7 +105,7 @@ describe("Palette contract", async () => {
           verifyingContract: await manager.getAddress(),
         },
         message: {
-          paletteId: 1n,
+          paletteId: 2n,
           contractAddress: await testERC721Upgradeable.getAddress(),
           tokenId: 1n,
         },
@@ -130,9 +131,9 @@ describe("Palette contract", async () => {
       const isSet = await testERC721Upgradeable.isPaletteSet(1n);
       console.log({ isSet });
       // console.log(signature);
-      expect(await testERC721Upgradeable.setPalette(1n, 1n, signature))
+      expect(await testERC721Upgradeable.setPalette(1n, 2n, signature))
         .to.emit(testERC721Upgradeable, "PaletteSet")
-        .withArgs(1n, 1n);
+        .withArgs(1n, 2n);
       // console.log(await testERC721Upgradeable.getRGBPalette(1n));
       const webPalette = await testERC721Upgradeable.getPalette(1n);
       // console.log(webPalette);

@@ -53,6 +53,8 @@ describe("Palette contract", async () => {
 
     await manager.setStorageContract(await storage.getAddress());
     await palettes.setPrice(ethers.parseEther("0.01"));
+
+    await palettes.startMintingPhase();
   });
 
   describe("Should Deploy", async function () {
@@ -99,7 +101,7 @@ describe("Palette contract", async () => {
 </style>
             </head><body><div class="box">`;
       const maxMint = 10;
-      for (let i = 0; i < maxMint; i++) {
+      for (let i = 1; i <= maxMint; i++) {
         const tx1 = await palettes.mint(1n, [], {
           value: ethers.parseEther("0.01"),
         });
@@ -111,7 +113,7 @@ describe("Palette contract", async () => {
 
       html += `</div></body></html>`;
       fs.writeFileSync("test_palettes.html", html);
-      expect(await palettes.minted()).to.equal(maxMint);
+      expect(await palettes.minted()).to.equal(maxMint + 1);
     });
     it("Should set the record for an NFT", async function () {
       let NFT = await ethers.getContractFactory("TestERC721");
@@ -148,7 +150,7 @@ describe("Palette contract", async () => {
           verifyingContract: await manager.getAddress(),
         },
         message: {
-          paletteId: 1n,
+          paletteId: 2n,
           contractAddress: await nft.getAddress(),
           tokenId: 1n,
         },
@@ -173,9 +175,9 @@ describe("Palette contract", async () => {
       );
 
       // console.log(signature);
-      expect(await nft.setPalette(1n, 1n, signature))
+      expect(await nft.setPalette(1n, 2n, signature))
         .to.emit(nft, "PaletteSet")
-        .withArgs(1n, 1n);
+        .withArgs(1n, 2n);
 
       // console.log("#".repeat(100), "\n", await nft.getRGBPalette(1n));
       // console.log({
@@ -230,7 +232,7 @@ describe("Palette contract", async () => {
           verifyingContract: await manager.getAddress(),
         },
         message: {
-          paletteId: 1n,
+          paletteId: 2n,
           contractAddress: await testErc721.getAddress(),
           tokenId: 1n,
         },
@@ -242,9 +244,9 @@ describe("Palette contract", async () => {
       );
 
       // console.log(signature);
-      expect(await testErc721.setPalette(1n, 1n, signature))
+      expect(await testErc721.setPalette(1n, 2n, signature))
         .to.emit(testErc721, "PaletteSet")
-        .withArgs(1n, 1n);
+        .withArgs(1n, 2n);
     });
 
     it("Should maintain palette assignment when NFT is transferred to another account", async function () {
@@ -295,7 +297,7 @@ describe("Palette contract", async () => {
           verifyingContract: await manager.getAddress(),
         },
         message: {
-          paletteId: 1n,
+          paletteId: 2n,
           contractAddress: await testErc721.getAddress(),
           tokenId: 1n,
         },
@@ -309,7 +311,7 @@ describe("Palette contract", async () => {
       );
 
       // Set palette for the NFT
-      await testErc721.setPalette(1n, 1n, signature);
+      await testErc721.setPalette(1n, 2n, signature);
 
       // Verify palette is set before transfer
       expect(await testErc721.isPaletteSet(1n)).to.be.true;

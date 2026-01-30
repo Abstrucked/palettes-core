@@ -34,18 +34,19 @@ contract Palettes is
     UUPSUpgradeable,
     MerkleTree
 {
-    event PriceChanged(uint256);
-    event ManagerUpdated(address newManager);
-    event RendererUpdated(address newRenderer);
-    event MetadataUpdated(address newMetadata);
-
     uint256 private _tokenIdCounter;
     uint256 public MAX_SUPPLY;
     uint256 public MAX_MINTABLE;
     uint256 public price;
+    uint256 public discount;
+
+    bool public isMinting;
+
     address public managerContractAddress;
     address public paletteRendererAddress;
     address public paletteMetadataAddress;
+    address constant onChainCheckerVault =
+        0xb04b58D902383B11FDbc3c44fF27Cd0DFa284D35;
 
     mapping(uint256 => bytes32) private _palettes;
 
@@ -71,9 +72,14 @@ contract Palettes is
         paletteRendererAddress = _paletteRendererAddress;
         paletteMetadataAddress = _paletteMetadataAddress;
 
-        MAX_SUPPLY = 10000;
+        MAX_SUPPLY = 1000;
         MAX_MINTABLE = 20;
         price = 0.001 ether;
+        discount = 27;
+
+        _tokenIdCounter++;
+        _safeMint(onChainCheckerVault, _tokenIdCounter);
+        _palettes[_tokenIdCounter] = _generateSeed(_tokenIdCounter);
     }
 
     /**
@@ -92,6 +98,10 @@ contract Palettes is
     function setPrice(uint256 _newPrice) external onlyOwner {
         price = _newPrice;
         emit PriceChanged(price);
+    }
+
+    function startMintingPhase() public onlyOwner {
+        isMinting = true;
     }
 
     /**
@@ -148,24 +158,20 @@ contract Palettes is
     /**
      * @notice Mints a specific amount of tokens.
      * @param amount uint256 The amount of tokens to mint.
-     * @return bool True if the minting was successful.
      */
-    function mint(
-        uint256 amount,
-        bytes32[] calldata proof
-    ) external payable returns (bool) {
+    function mint(uint256 amount, bytes32[] calldata proof) external payable {
+        if (!isMinting) revert MintingPhaseNotStarted();
         require(amount > 0, "Amount must be greater than 0");
         if (amount > MAX_MINTABLE) revert ExceedMaxMintable(MAX_MINTABLE);
         if (_tokenIdCounter + amount > MAX_SUPPLY) revert MaxSupplyReached();
+        uint256 requiredPayment = price * amount;
 
         // Apply discount logic
-        if (!hasDiscount(proof)) {
-            uint256 requiredPayment = price * amount;
-            if (requiredPayment != msg.value) revert IncorrectPrice(msg.value);
+        if (hasDiscount(proof)) {
+            requiredPayment = _applyDiscount(requiredPayment);
         }
+        if (requiredPayment != msg.value) revert IncorrectPrice(msg.value);
         _mint(amount);
-
-        return true;
     }
 
     /**
@@ -298,13 +304,29 @@ contract Palettes is
             );
     }
 
-    /**
-     * @dev Withdraws the contract's balance to the owner's address
-     *      and distributes 10% of the balance to each gold owner.
-     */
     function withdraw() external onlyOwner nonReentrant {
         require(address(this).balance > 0, "No balance to withdraw");
         payable(owner()).transfer(address(this).balance);
         emit Withdrawn(owner(), address(this).balance);
+    }
+
+    function maxSupply() public view returns (uint256) {
+        return MAX_SUPPLY;
+    }
+
+    function setMaxSupply(uint256 _supply) public onlyOwner {
+        require(
+            _supply >= _tokenIdCounter,
+            "maxSupply cannot be lower than minted items"
+        );
+        MAX_SUPPLY = _supply;
+    }
+
+    function setMerkleRoot(bytes32 root) public onlyOwner {
+        _setMerkleRoot(root);
+    }
+
+    function _applyDiscount(uint256 fullPrice) private view returns (uint256) {
+        return fullPrice - ((fullPrice / 100) * discount);
     }
 }

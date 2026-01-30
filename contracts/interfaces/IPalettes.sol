@@ -4,6 +4,10 @@ pragma solidity ^0.8.20;
 interface IPalettes {
     // Events
     event Withdrawn(address indexed to, uint256 amount);
+    event PriceChanged(uint256);
+    event ManagerUpdated(address newManager);
+    event RendererUpdated(address newRenderer);
+    event MetadataUpdated(address newMetadata);
 
     /// Color struct definition
     struct RGBColor {
@@ -23,4 +27,6 @@ interface IPalettes {
     function svg(uint256) external view returns (string memory);
 
     function minted() external view returns (uint256);
+
+    error MintingPhaseNotStarted();
 }

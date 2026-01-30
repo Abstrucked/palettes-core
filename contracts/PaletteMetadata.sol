@@ -130,7 +130,10 @@ contract PaletteMetadata {
         return
             string(
                 abi.encodePacked(
-                    "<html><body style='margin: 0; padding: 0;'>",
+                    "<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'/>",
+                    "<style>body{margin:0;padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#000;}",
+                    "svg{max-width:100%;max-height:100vh;width:auto;height:auto;}</style></head>",
+                    "<body>",
                     svg,
                     "</body></html>"
                 )

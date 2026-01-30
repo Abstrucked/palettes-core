@@ -3,7 +3,8 @@ require("dotenv").config();
 require("@nomicfoundation/hardhat-ledger");
 require("hardhat-gas-reporter");
 require("@openzeppelin/hardhat-upgrades");
-
+require("@nomicfoundation/hardhat-verify");
+require("@xyrusworx/hardhat-solidity-json");
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: "0.8.24",
@@ -34,6 +35,7 @@ module.exports = {
       "https://api.etherscan.io/api?module=proxy&action=eth_gasPrice",
     enabled: process.env.REPORT_GAS ? true : false,
   },
+  etherscan: process.env.ETHERSCAN_APIKEY,
   sourcify: {
     // Disabled by default
     // Doesn't need an API key
@@ -48,7 +50,7 @@ module.exports = {
     },
     baseSepolia: {
       url: process.env.BASE_SEPOLIA,
-      accounts: [process.env.BASE_SEPOLIA_DEPLOYER],
+      accounts: [process.env.DEPLOYER],
       ledgerAccounts: [
         "0x307E2701D27032E0663a704B3396163331DD6F72",
         "0xe4e1aEF9c352a6A56e39f502612cA88a3441CFA5",
@@ -56,7 +58,7 @@ module.exports = {
     },
     base: {
       url: process.env.BASE,
-      accounts: [process.env.BASE_SEPOLIA_DEPLOYER],
+      accounts: [process.env.DEPLOYER],
       ledgerAccounts: [
         "0x307E2701D27032E0663a704B3396163331DD6F72",
         "0xe4e1aEF9c352a6A56e39f502612cA88a3441CFA5",
@@ -83,7 +85,7 @@ if (process.env.SEPOLIA) {
   module.exports.networks.sepolia = {
     url: process.env.SEPOLIA,
     // ledgerAccounts: ["0x307E2701D27032E0663a704B3396163331DD6F72"],
-    accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+    accounts: [process.env.DEPLOYER],
   };
 }
 
