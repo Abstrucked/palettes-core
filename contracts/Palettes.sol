@@ -75,7 +75,7 @@ contract Palettes is
         MAX_SUPPLY = 1000;
         MAX_MINTABLE = 20;
         price = 0.001 ether;
-        discount = 27;
+        discount = 25;
 
         _tokenIdCounter++;
         _safeMint(onChainCheckerVault, _tokenIdCounter);
